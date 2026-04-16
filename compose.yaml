@@ -1,9 +1,21 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    image: postgres:15.8
+    container_name: sparta-delivery-postgres
+    restart: unless-stopped
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: ${DB_NAME:-delivery}
+      POSTGRES_USER: ${DB_USERNAME:-delivery_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-delivery_password}
     ports:
-      - '5432'
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
