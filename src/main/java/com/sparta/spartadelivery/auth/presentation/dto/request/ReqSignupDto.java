@@ -8,8 +8,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ReqSignupDto(
-        @NotBlank(message = "사용자 ID는 필수입니다.")
-        @Pattern(regexp = "^[a-z0-9]{4,10}$", message = "사용자 ID는 4~10자의 알파벳 소문자와 숫자만 사용할 수 있습니다.")
+
+        @NotBlank(message = "사용자 이름은 필수입니다.")
+        @Size(min = 2, max = 10, message = "사용자 이름은 2~10자여야 합니다.")
         String username,
 
         @NotBlank(message = "비밀번호는 필수입니다.")

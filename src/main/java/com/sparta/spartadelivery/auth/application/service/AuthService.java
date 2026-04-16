@@ -30,9 +30,6 @@ public class AuthService {
 
     @Transactional
     public ResSignupDto signup(ReqSignupDto request) {
-        if (userRepository.existsByUsername(request.username())) {
-            throw new AppException(ErrorCode.DUPLICATE_USERNAME);
-        }
         if (userRepository.existsByEmail(request.email())) {
             throw new AppException(ErrorCode.DUPLICATE_EMAIL);
         }
