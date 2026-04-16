@@ -1,4 +1,4 @@
-package com.sparta.spartadelivery.global.exeption;
+package com.sparta.spartadelivery.global.exception;
 
 import lombok.Getter;
 
