@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        UserEntity user = (UserEntity) userRepository.findByEmailAndDeletedAtIsNull(email)
+        UserEntity user = userRepository.findByEmailAndDeletedAtIsNull(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return UserPrincipal.from(user);
     }
