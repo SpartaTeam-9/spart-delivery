@@ -5,27 +5,30 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record ReqSignupDto(
-        @NotBlank
-        @Pattern(regexp = "^[a-z0-9]{4,10}$", message = "4~10자의 알파벳 소문자 및 숫자만 사용 가능합니다.")
+        @NotBlank(message = "사용자 ID는 필수입니다.")
+        @Pattern(regexp = "^[a-z0-9]{4,10}$", message = "사용자 ID는 4~10자의 알파벳 소문자와 숫자만 사용할 수 있습니다.")
         String username,
 
-        @NotBlank
+        @NotBlank(message = "비밀번호는 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,15}$",
-                message = "8~15자의 대소문자, 숫자, 특수문자를 모두 포함해야 합니다."
+                message = "비밀번호는 8~15자의 영문 대소문자, 숫자, 특수문자를 모두 포함해야 합니다."
         )
         String password,
 
-        @NotBlank
+        @NotBlank(message = "닉네임은 필수입니다.")
+        @Size(max = 100, message = "닉네임은 최대 100자까지 입력할 수 있습니다.")
         String nickname,
 
-        @NotBlank
-        @Email
+        @NotBlank(message = "이메일은 필수입니다.")
+        @Email(message = "이메일 형식이 올바르지 않습니다.")
+        @Size(max = 255, message = "이메일은 최대 255자까지 입력할 수 있습니다.")
         String email,
 
-        @NotNull
+        @NotNull(message = "권한은 필수입니다.")
         Role role
 ) {
 }
