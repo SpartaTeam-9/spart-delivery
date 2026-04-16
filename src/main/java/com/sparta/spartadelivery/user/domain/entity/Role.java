@@ -10,6 +10,7 @@ public enum Role {
     // 최종 관리자 : 전체 권한 + MANAGER 관리/생성/삭제
     MASTER;
 
+    // e.g. ROLE_CUSTOMER, ROLE_OWNER, ROLE_MANAGER, ROLE_MASTER
     public String asAuthority() {
         return "ROLE_" + name();
     }
