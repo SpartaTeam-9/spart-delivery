@@ -9,6 +9,7 @@ import com.sparta.spartadelivery.address.presentation.dto.response.AddressDetail
 import com.sparta.spartadelivery.address.presentation.dto.response.AddressInfo;
 import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.global.exception.ErrorCode;
+import com.sparta.spartadelivery.user.domain.entity.Role;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import com.sparta.spartadelivery.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -64,24 +65,28 @@ public class AddressService {
         return AddressInfo.of(address);
     }
 
+    // 삭제는 CUSTOMER 과 MASTER 둘 다 가능합니다.
     @Transactional
     public void deleteAddress(UUID addressId, Long userId) throws AccessDeniedException {
         UserEntity user = getUser(userId);
 
-        Address address = findAndValidateAddress(addressId, user);
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND, "주소를 찾을 수 없습니다."));
+
+        validateDeleteUser(userId, address.getUser().getUsername());
 
         address.markDeleted(user.getUsername());
     }
 
     @Transactional
-    public void setDefaultAddress(UUID addressId, Long userId) throws AccessDeniedException {
+    public void changeDefaultAddress(UUID addressId, Long userId) throws AccessDeniedException {
         UserEntity user = getUser(userId);
 
         Address address = findAndValidateAddress(addressId, user);
 
-        addressRepository.resetDefaultByUserId(user.getUsername());
+        addressRepository.updateAllDefaultToFalse(user.getUsername());
 
-        address.assignDefault();
+        address.setAsDefault();
     }
 
 
@@ -102,6 +107,18 @@ public class AddressService {
         }
 
         return  address;
+    }
+
+    private void validateDeleteUser(Long userId, String ownerUsername) {
+        UserEntity user = getUser(userId);
+
+        boolean isAdmin = user.getRole().equals(Role.MASTER);
+
+        boolean isOwner = user.getUsername().equals(ownerUsername);
+
+        if (!isAdmin && !isOwner) {
+            throw new AppException(ErrorCode.ACCESS_DENIED, "해당 접근 권한이 없습니다.");
+        }
     }
 
 
