@@ -1,5 +1,8 @@
 # Sparta Delivery 개발 가이드
 
+[![codecov](https://codecov.io/gh/SpartaTeam-9/spart-delivery/branch/develop/graph/badge.svg)](https://codecov.io/gh/SpartaTeam-9/spart-delivery)
+
+
 이 문서는 프로젝트 소개보다 **팀원들이 스켈레톤 코드를 이어받아 각자 담당 기능을 바로 개발할 수 있게 돕는 것**을 목적으로 합니다.
 
 팀원들은 아래 내용을 먼저 훑고 개발을 시작해 주세요.
