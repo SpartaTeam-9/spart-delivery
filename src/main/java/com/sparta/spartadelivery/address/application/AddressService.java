@@ -2,7 +2,7 @@ package com.sparta.spartadelivery.address.application;
 
 import com.sparta.spartadelivery.address.domain.entity.Address;
 import com.sparta.spartadelivery.address.domain.repository.AddressRepository;
-import com.sparta.spartadelivery.address.exception.AddressException;
+import com.sparta.spartadelivery.address.exception.AddressErrorCode;
 import com.sparta.spartadelivery.address.presentation.dto.request.AddressCreateRequest;
 import com.sparta.spartadelivery.address.presentation.dto.request.AddressUpdateRequest;
 import com.sparta.spartadelivery.address.presentation.dto.response.AddressDetailInfo;
@@ -78,13 +78,13 @@ public class AddressService {
     private UserEntity getUser(Long id) {
 
         return userRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REQUEST, "접근 권한이 없습니다."));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
     }
 
     private Address findAndValidateAddress(UUID addressId, UserEntity user) throws AccessDeniedException {
 
         Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new AppException(ErrorCode.VALIDATION_ERROR, "주소를 찾을 수 없습니다."));
+                .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND, "주소를 찾을 수 없습니다."));
 
         if (!address.getUser().getUsername().equals(user.getUsername())) {
             throw new AccessDeniedException("해당 접근 권한이 없습니다.");
