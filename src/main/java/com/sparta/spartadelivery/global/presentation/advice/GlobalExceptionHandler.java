@@ -2,6 +2,7 @@ package com.sparta.spartadelivery.global.presentation.advice;
 
 import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.global.exception.ErrorCode;
+import com.sparta.spartadelivery.global.exception.code.BaseErrorCode;
 import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
 import com.sparta.spartadelivery.global.presentation.dto.ValidationErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
     // 서비스 로직에서 의도적으로 던진 예외는 ErrorCode에 정의된 상태 코드로 응답한다.
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(AppException exception) {
-        ErrorCode errorCode = exception.getErrorCode();
+        BaseErrorCode errorCode = exception.getErrorCode();
         return ResponseEntity.status(errorCode.getStatus())
                 .body(ApiResponse.error(errorCode.getStatus().value(), exception.getMessage(), null));
     }
