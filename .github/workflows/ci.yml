@@ -40,6 +40,15 @@ jobs:
       - name: Run tests and generate coverage
         run: ./gradlew clean test jacocoTestReport
 
+      # JaCoCo XML 리포트를 Codecov로 업로드해 PR에서 커버리지 변화를 확인한다.
+      # 초기 도입 단계이므로 Codecov 업로드 실패가 테스트 CI 실패로 이어지지는 않게 한다.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: false
+
       # 실패한 CI에서도 테스트/커버리지 결과를 내려받아 원인을 확인할 수 있게 보관한다.
       - name: Upload test and coverage reports
         if: always()
