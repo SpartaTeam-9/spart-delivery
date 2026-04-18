@@ -4,7 +4,9 @@ import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrinc
 import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
 import com.sparta.spartadelivery.user.application.service.UserService;
 import com.sparta.spartadelivery.user.presentation.dto.request.ReqUpdateUserDto;
+import com.sparta.spartadelivery.user.presentation.dto.request.ReqUpdateUserRoleDto;
 import com.sparta.spartadelivery.user.presentation.dto.response.ResUpdateUserDto;
+import com.sparta.spartadelivery.user.presentation.dto.response.ResUpdateUserRoleDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -100,6 +102,35 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         ResUpdateUserDto response = userService.updateUser(userId, request, userPrincipal);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "SUCCESS", response));
+    }
+
+    @Operation(
+            summary = "사용자 권한 수정 API",
+            description = """
+                    MASTER 권한으로 대상 사용자의 role을 수정합니다.
+
+                    **요청 가능 권한**
+
+                    - MASTER
+
+                    **수정 가능 필드**
+
+                    - role
+
+                    **처리 정책**
+
+                    - MASTER가 아닌 사용자는 권한을 수정할 수 없습니다.
+                    - MASTER는 자기 자신의 권한을 변경할 수 없습니다.
+                    """
+    )
+    @PatchMapping("/users/{userId}/role")
+    public ResponseEntity<ApiResponse<ResUpdateUserRoleDto>> updateUserRole(
+            @PathVariable Long userId,
+            @Valid @RequestBody ReqUpdateUserRoleDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        ResUpdateUserRoleDto response = userService.updateUserRole(userId, request, userPrincipal);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "SUCCESS", response));
     }
 }
