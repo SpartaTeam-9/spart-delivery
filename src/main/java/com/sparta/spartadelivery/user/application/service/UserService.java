@@ -8,7 +8,9 @@ import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import com.sparta.spartadelivery.user.domain.repository.UserRepository;
 import com.sparta.spartadelivery.user.exception.UserErrorCode;
 import com.sparta.spartadelivery.user.presentation.dto.request.ReqUpdateUserDto;
+import com.sparta.spartadelivery.user.presentation.dto.request.ReqUpdateUserRoleDto;
 import com.sparta.spartadelivery.user.presentation.dto.response.ResUpdateUserDto;
+import com.sparta.spartadelivery.user.presentation.dto.response.ResUpdateUserRoleDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,19 @@ public class UserService {
         return ResUpdateUserDto.from(targetUser);
     }
 
+    // MASTER 전용 사용자 권한 수정 API
+    @Transactional
+    public ResUpdateUserRoleDto updateUserRole(Long userId, ReqUpdateUserRoleDto request, UserPrincipal requester) {
+        // 권한 수정의 대상이 되는 사용자를 조회하여 존재하지 않으면 USER_NOT_FOUND로 처리한다.
+        UserEntity targetUser = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new AppException(AuthErrorCode.USER_NOT_FOUND));
+
+        validateRoleUpdatePermission(requester, targetUser);
+        targetUser.updateRole(request.role());
+
+        return ResUpdateUserRoleDto.from(targetUser);
+    }
+
     private void validateManagePermission(UserPrincipal requester, UserEntity targetUser) {
         // MASTER는 모든 사용자 정보를 수정할 수 있도록 한다
         if (requester.getRole() == Role.MASTER) {
@@ -78,6 +93,16 @@ public class UserService {
         return targetUser.getRole() == Role.CUSTOMER || targetUser.getRole() == Role.OWNER;
     }
 
+    private void validateRoleUpdatePermission(UserPrincipal requester, UserEntity targetUser) {
+        // MASTER만 다른 사용자의 권한을 수정할 수 있도록 한다.
+        if (requester.getRole() != Role.MASTER) {
+            throw new AppException(UserErrorCode.USER_ROLE_UPDATE_ACCESS_DENIED);
+        }
+        // MASTER가 자기 자신의 권한을 변경할 수 없도록 한다.
+        if (requester.getId().equals(targetUser.getId())) {
+            throw new AppException(UserErrorCode.SELF_ROLE_UPDATE_DENIED);
+        }
+    }
 
     // 이메일 변경 시 중복 이메일 검증을 수행한다.
     private void validateDuplicateEmail(ReqUpdateUserDto request, UserEntity targetUser) {
