@@ -33,7 +33,6 @@ public class UserEntity extends BaseEntity {
     @Column(name = "password", length = 255, nullable = false)
     private String password;
 
-    // TODO: 복수 권한 부여가 필요해지면 단일 Role 필드를 Set<Role> 구조로 전환한다.
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 20, nullable = false)
     private Role role;
@@ -75,5 +74,9 @@ public class UserEntity extends BaseEntity {
 
     public void updatePassword(String password) {
         this.password = password;
+    }
+
+    public void updateRole(Role role) {
+        this.role = role;
     }
 }
