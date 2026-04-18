@@ -1,12 +1,12 @@
 package com.sparta.spartadelivery.auth.application.service;
 
 
+import com.sparta.spartadelivery.auth.exception.AuthErrorCode;
 import com.sparta.spartadelivery.auth.presentation.dto.request.ReqLoginDto;
 import com.sparta.spartadelivery.auth.presentation.dto.request.ReqSignupDto;
 import com.sparta.spartadelivery.auth.presentation.dto.response.ResLoginDto;
 import com.sparta.spartadelivery.auth.presentation.dto.response.ResSignupDto;
 import com.sparta.spartadelivery.global.exception.AppException;
-import com.sparta.spartadelivery.global.exception.ErrorCode;
 import com.sparta.spartadelivery.global.infrastructure.config.security.JwtTokenProvider;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
@@ -31,7 +31,7 @@ public class AuthService {
     @Transactional
     public ResSignupDto signup(ReqSignupDto request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new AppException(ErrorCode.DUPLICATE_EMAIL);
+            throw new AppException(AuthErrorCode.DUPLICATE_EMAIL);
         }
 
         UserEntity savedUser = userRepository.save(UserEntity.builder()
@@ -60,11 +60,11 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
         } catch (BadCredentialsException exception) {
-            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+            throw new AppException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         UserEntity user = userRepository.findByEmailAndDeletedAtIsNull(request.email())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppException(AuthErrorCode.USER_NOT_FOUND));
 
         String accessToken = jwtTokenProvider.generateAccessToken(UserPrincipal.from(user));
         return new ResLoginDto(accessToken, user.getUsername(), user.getRole());
