@@ -7,10 +7,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sparta.spartadelivery.auth.exception.AuthErrorCode;
 import com.sparta.spartadelivery.auth.presentation.dto.request.ReqLoginDto;
 import com.sparta.spartadelivery.auth.presentation.dto.request.ReqSignupDto;
 import com.sparta.spartadelivery.global.exception.AppException;
-import com.sparta.spartadelivery.global.exception.ErrorCode;
 import com.sparta.spartadelivery.global.infrastructure.config.security.JwtTokenProvider;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.user.domain.entity.Role;
@@ -83,7 +83,7 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.signup(request))
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.DUPLICATE_EMAIL);
+                .isEqualTo(AuthErrorCode.DUPLICATE_EMAIL);
 
         verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any());
@@ -124,7 +124,7 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+                .isEqualTo(AuthErrorCode.INVALID_CREDENTIALS);
 
         verify(userRepository, never()).findByEmailAndDeletedAtIsNull(any());
         verify(jwtTokenProvider, never()).generateAccessToken(any());
@@ -139,7 +139,7 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+                .isEqualTo(AuthErrorCode.USER_NOT_FOUND);
 
         verify(authenticationManager).authenticate(
                 new UsernamePasswordAuthenticationToken("user01@example.com", "Password1!")
