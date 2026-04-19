@@ -158,7 +158,7 @@ public class AddressServiceTest {
         // then
         // 관리자는 본인 소유가 아니어도 삭제가 가능해야 함 (Exception 발생 안 함)
         verify(addressRepository, times(1)).findById(addressId);
-        verify(userRepository, times(2)).findById(anyLong()); // deleteAddress에서 1번, validateDeleteUser에서 1번
+        verify(userRepository, times(1)).findById(anyLong()); // deleteAddress에서 1번, validateDeleteUser에서 1번
     }
 
     @Test
