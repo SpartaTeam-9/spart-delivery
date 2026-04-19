@@ -1,4 +1,4 @@
-package com.sparta.spartadelivery.Address.config;
+package com.sparta.spartadelivery.address.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -9,9 +9,9 @@ import java.util.Optional;
 
 @TestConfiguration
 @EnableJpaAuditing
-public class TestJpaConfig {
+public class TestConfig {
     @Bean
     public AuditorAware<String> auditorProvider() {
-        return () -> Optional.of("TEST_USER"); // 테스트 시 작성자를 "TEST_USER"로 고정
+        return () -> Optional.of("TEST_USER"); // BaseEntity의 createdBy 결측 방지
     }
 }

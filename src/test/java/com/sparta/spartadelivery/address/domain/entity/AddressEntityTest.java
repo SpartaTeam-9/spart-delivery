@@ -1,6 +1,5 @@
-package com.sparta.spartadelivery.Address.domain.entity;
+package com.sparta.spartadelivery.address.domain.entity;
 
-import com.sparta.spartadelivery.address.domain.entity.Address;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;

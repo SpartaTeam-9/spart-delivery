@@ -1,9 +1,7 @@
 package com.sparta.spartadelivery.address.exception;
 
-import com.sparta.spartadelivery.global.exception.ErrorCode;
-import com.sparta.spartadelivery.global.exception.code.BaseErrorCode;
+import com.sparta.spartadelivery.global.exception.BaseErrorCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Getter

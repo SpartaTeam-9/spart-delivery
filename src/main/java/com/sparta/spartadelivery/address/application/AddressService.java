@@ -8,7 +8,6 @@ import com.sparta.spartadelivery.address.presentation.dto.request.AddressUpdateR
 import com.sparta.spartadelivery.address.presentation.dto.response.AddressDetailInfo;
 import com.sparta.spartadelivery.address.presentation.dto.response.AddressInfo;
 import com.sparta.spartadelivery.global.exception.AppException;
-import com.sparta.spartadelivery.global.exception.ErrorCode;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import com.sparta.spartadelivery.user.domain.repository.UserRepository;
@@ -16,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +44,7 @@ public class AddressService {
 
     }
 
-    public AddressDetailInfo getAddress(UUID addressId, Long userId) throws AccessDeniedException {
+    public AddressDetailInfo getAddress(UUID addressId, Long userId) {
         UserEntity user = getUser(userId);
 
         Address address = findAndValidateAddress(addressId, user);
@@ -55,7 +53,7 @@ public class AddressService {
     }
 
     @Transactional
-    public AddressInfo updatedAddress(UUID addressId, AddressUpdateRequest request, Long userId) throws AccessDeniedException {
+    public AddressInfo updatedAddress(UUID addressId, AddressUpdateRequest request, Long userId) {
         UserEntity user = getUser(userId);
 
         Address address = findAndValidateAddress(addressId, user);
@@ -67,7 +65,7 @@ public class AddressService {
 
     // 삭제는 CUSTOMER 과 MASTER 둘 다 가능합니다.
     @Transactional
-    public void deleteAddress(UUID addressId, Long userId) throws AccessDeniedException {
+    public void deleteAddress(UUID addressId, Long userId)  {
         UserEntity user = getUser(userId);
 
         Address address = addressRepository.findById(addressId)
@@ -79,7 +77,7 @@ public class AddressService {
     }
 
     @Transactional
-    public void changeDefaultAddress(UUID addressId, Long userId) throws AccessDeniedException {
+    public void changeDefaultAddress(UUID addressId, Long userId) {
         UserEntity user = getUser(userId);
 
         Address address = findAndValidateAddress(addressId, user);
@@ -94,16 +92,16 @@ public class AddressService {
     private UserEntity getUser(Long id) {
 
         return userRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_ACCESS_DENIED, "사용자를 찾을 수 없습니다."));
     }
 
-    private Address findAndValidateAddress(UUID addressId, UserEntity user) throws AccessDeniedException {
+    private Address findAndValidateAddress(UUID addressId, UserEntity user) {
 
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND, "주소를 찾을 수 없습니다."));
 
         if (!address.getUser().getUsername().equals(user.getUsername())) {
-            throw new AccessDeniedException("해당 접근 권한이 없습니다.");
+            throw new AppException(AddressErrorCode.ADDRESS_ACCESS_DENIED, "해당 주소에 대한 접근 권한이 없습니다.");
         }
 
         return  address;
@@ -117,7 +115,7 @@ public class AddressService {
         boolean isOwner = user.getUsername().equals(ownerUsername);
 
         if (!isAdmin && !isOwner) {
-            throw new AppException(ErrorCode.ACCESS_DENIED, "해당 접근 권한이 없습니다.");
+            throw new AppException(AddressErrorCode.ADDRESS_ACCESS_DENIED, "해당 접근 권한이 없습니다.");
         }
     }
 

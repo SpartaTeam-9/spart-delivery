@@ -35,6 +35,7 @@ public class Address extends BaseEntity {
     @Column(name = "zip_code", length = 10)
     private String zipCode;
 
+    @Column(name = "is_default")
     private boolean isDefault = false;
 
     @Builder
