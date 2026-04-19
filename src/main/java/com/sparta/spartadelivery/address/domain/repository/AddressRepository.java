@@ -12,7 +12,10 @@ import java.util.UUID;
 
 public interface AddressRepository extends JpaRepository<Address, UUID> {
 
-    List<Address> finAllByUserDeletedAtIsNull(UserEntity user);
+    // List<Address> findAllByUserDeletedAtIsNull(UserEntity user);
+
+    @Query("SELECT a FROM Address a WHERE a.user = :user AND a.deletedAt IS NULL")
+    List<Address> findAllByUserAndDeletedAtIsNull(UserEntity user);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Address a SET a.isDefault = false " +

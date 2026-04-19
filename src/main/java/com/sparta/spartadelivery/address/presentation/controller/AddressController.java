@@ -18,6 +18,7 @@ public class AddressController {
 
     private final AddressService addressService;
 
+    /*
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createdAddress(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
@@ -73,4 +74,6 @@ return ResponseEntity.status(HttpStatus.CREATED)
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(HttpStatus.OK.value(), "SUCCESS", null));
     }
+
+     */
 }

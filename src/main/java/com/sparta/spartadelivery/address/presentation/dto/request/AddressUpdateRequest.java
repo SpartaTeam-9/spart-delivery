@@ -9,6 +9,6 @@ public record AddressUpdateRequest(
         String address,
         String detail,
         String zipCode,
-        boolean isDefault;
+        boolean isDefault
 ) {
 }

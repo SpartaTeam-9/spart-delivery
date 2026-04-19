@@ -41,7 +41,7 @@ public class AddressService {
     public List<AddressInfo> getAddresses(Long userId) {
         UserEntity user = getUser(userId);
 
-        return addressRepository.finAllByUserDeletedAtIsNull(user)
+        return addressRepository.findAllByUserAndDeletedAtIsNull(user)
                 .stream().map(AddressInfo::of).toList();
 
     }
