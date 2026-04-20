@@ -64,6 +64,14 @@ public class UserService {
         user.markDeleted(requester.getAccountName());
     }
 
+    // 관리자용 사용자 탈퇴 API (MANAGER, MASTER만 사용 가능)
+    @Transactional
+    public void deleteUser(Long userId, UserPrincipal requester) {
+        UserEntity targetUser = getActiveUser(userId);
+        validateUserDeletePermission(requester, targetUser);
+        targetUser.markDeleted(requester.getAccountName());
+    }
+
     // 사용자 목록 조회 API
     @Transactional(readOnly = true)
     public ResUserPageDto getUsers(
@@ -210,6 +218,19 @@ public class UserService {
 
     private boolean canManagerUpdate(UserEntity targetUser) {
         return targetUser.getRole() == Role.CUSTOMER || targetUser.getRole() == Role.OWNER;
+    }
+
+    private void validateUserDeletePermission(UserPrincipal requester, UserEntity targetUser) {
+        if (requester.getRole() != Role.MANAGER && requester.getRole() != Role.MASTER) {
+            throw new AppException(UserErrorCode.USER_DELETE_ACCESS_DENIED);
+        }
+        if (requester.getId().equals(targetUser.getId())) {
+            throw new AppException(UserErrorCode.SELF_DELETE_BY_ADMIN_API_DENIED);
+        }
+        validateMasterDeleteDenied(targetUser);
+        if (requester.getRole() == Role.MANAGER && !canManagerUpdate(targetUser)) {
+            throw new AppException(UserErrorCode.MANAGER_DELETE_TARGET_ACCESS_DENIED);
+        }
     }
 
     private void validateMasterDeleteDenied(UserEntity targetUser) {
