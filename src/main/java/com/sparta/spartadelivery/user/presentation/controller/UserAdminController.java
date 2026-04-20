@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -118,6 +119,38 @@ public class UserAdminController {
     ) {
         ResUpdateUserDto response = userService.updateUser(userId, request, userPrincipal);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), response));
+    }
+
+    // 관리자 권한으로 대상 사용자를 탈퇴 처리한다.
+    @Operation(
+            summary = "관리자용 사용자 탈퇴 API",
+            description = """
+                    MANAGER 또는 MASTER 권한으로 대상 사용자를 탈퇴 처리합니다.
+
+                    **요청 가능 권한**
+
+                    - MANAGER
+                    - MASTER
+
+                    **대상 사용자 제한**
+
+                    - MANAGER는 CUSTOMER, OWNER 사용자만 탈퇴 처리할 수 있습니다.
+                    - MASTER는 CUSTOMER, OWNER, MANAGER 사용자를 탈퇴 처리할 수 있습니다.
+                    - MASTER 계정은 탈퇴 처리할 수 없습니다.
+                    - 관리자용 사용자 탈퇴 API로 자기 자신을 탈퇴 처리할 수 없습니다.
+
+                    **처리 정책**
+
+                    - 실제 데이터를 삭제하지 않고 deletedAt을 기록하는 soft delete 방식으로 처리합니다.
+                    """
+    )
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        userService.deleteUser(userId, userPrincipal);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), null));
     }
 
     @Operation(
