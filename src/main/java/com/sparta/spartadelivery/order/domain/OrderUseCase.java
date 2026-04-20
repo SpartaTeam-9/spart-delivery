@@ -1,6 +1,6 @@
 package com.sparta.spartadelivery.order.domain;
 
-import com.sparta.spartadelivery.orderItem.domain.entity.OrderItem;
+import com.sparta.spartadelivery.order.domain.entity.OrderItem;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

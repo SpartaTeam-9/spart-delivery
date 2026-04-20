@@ -1,4 +1,4 @@
-package com.sparta.spartadelivery.orderItem.domain.entity;
+package com.sparta.spartadelivery.order.domain.entity;
 
 import com.sparta.spartadelivery.order.domain.entity.Order;
 import jakarta.persistence.*;
