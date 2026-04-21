@@ -2,6 +2,7 @@ package com.sparta.spartadelivery.area.presentation.controller;
 
 import com.sparta.spartadelivery.area.application.service.AreaService;
 import com.sparta.spartadelivery.area.presentation.dto.request.AreaCreateRequest;
+import com.sparta.spartadelivery.area.presentation.dto.request.AreaUpdateRequest;
 import com.sparta.spartadelivery.area.presentation.dto.response.AreaDetailResponse;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
@@ -16,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +54,32 @@ public class AreaController {
         AreaDetailResponse response = areaService.createArea(request, userPrincipal);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "CREATED", response));
+    }
+
+    @Operation(
+            summary = "운영 지역 수정 API",
+            description = """
+                    운영 지역 정보를 수정합니다.
+
+                    **요청 가능 권한**
+
+                    - MANAGER
+                    - MASTER
+
+                    **처리 정책**
+
+                    - 삭제되지 않은 운영 지역만 수정할 수 있습니다.
+                    - 지역명이 변경되는 경우 삭제되지 않은 운영 지역 기준으로 중복 검증을 수행합니다.
+                    """
+    )
+    @PutMapping("/{areaId}")
+    public ResponseEntity<ApiResponse<AreaDetailResponse>> updateArea(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID areaId,
+            @Valid @RequestBody AreaUpdateRequest request
+    ) {
+        AreaDetailResponse response = areaService.updateArea(areaId, request, userPrincipal);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), response));
     }
 
     @Operation(
