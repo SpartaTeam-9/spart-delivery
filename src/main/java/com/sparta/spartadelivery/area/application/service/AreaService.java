@@ -23,13 +23,18 @@ public class AreaService {
     public AreaDetailResponse createArea(AreaCreateRequest request, UserPrincipal requester) {
         // 운영 지역 등록은 MANAGER, MASTER 권한만 허용한다.
         validateCreatePermission(requester);
+
+        String name = request.name().strip();
+        String city = request.city().strip();
+        String district = request.district().strip();
+
         // soft delete 되지 않은 운영 지역 중 같은 이름이 있으면 등록을 막는다.
-        validateDuplicateName(request.name());
+        validateDuplicateName(name);
 
         Area area = Area.builder()
-                .name(request.name())
-                .city(request.city())
-                .district(request.district())
+                .name(name)
+                .city(city)
+                .district(district)
                 .active(request.active())
                 .build();
 
