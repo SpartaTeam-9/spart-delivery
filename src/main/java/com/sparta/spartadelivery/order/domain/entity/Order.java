@@ -2,6 +2,8 @@ package com.sparta.spartadelivery.order.domain.entity;
 
 import com.sparta.spartadelivery.address.domain.entity.Address;
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.global.exception.AppException;
+import com.sparta.spartadelivery.order.exception.OrderErrorCode;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -11,6 +13,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CollectionId;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -54,44 +58,27 @@ public class Order extends BaseEntity {
     private String request;
 
     @Builder
-    public Order(Long userId, UUID addressId, UUID storeId, Integer totalPrice, String request) {
-        this.customerId = userId;
-        this.addressId = addressId;
+    public Order(Long customerId, UUID storeId, Integer totalPrice, String request) {
+        validateTotalPrice(totalPrice);
+        this.customerId = customerId;
         this.storeId = storeId;
-        validTotalPrice(totalPrice);
         this.totalPrice = totalPrice;
         this.request = request;
+        this.status = OrderStatus.PENDING;
     }
 
 
-    public void cancel() {
-        validCancelTime(this.getCreatedAt());
+    public void cancel(LocalDateTime createdAt,LocalDateTime now) {
+        if(now.isAfter(createdAt.plusMinutes(5))) {
+            throw new AppException(OrderErrorCode.ORDER_CANCEL_TIMEOUT)
+        }
         this.status = OrderStatus.CANCELED;
-
     }
 
-    public void updateRequest(String request) {
-        validUpdateRequest(this.status);
-        this.request = request;
-    }
-
-    private void  validTotalPrice(Integer totalPrice) {
-        if (totalPrice < 0) {
-            throw new IllegalArgumentException("주문 총액은 음수일 수 없습니다.");
+    private void validateTotalPrice(Integer totalPrice) {
+        if (totalPrice == null || totalPrice < 0) {
+            throw new AppException(OrderErrorCode.TOTAL_PRICE_OVER_ZERO);
         }
     }
-
-    private void validCancelTime(LocalDateTime createdAt) {
-        if (LocalDateTime.now().isAfter(createdAt.plusMinutes(5))) {
-            throw new IllegalStateException("주문은 생성 후 5분 이내에만 취소할 수 있습니다.");
-        }
-    }
-
-    private void validUpdateRequest(OrderStatus status) {
-        if (status != OrderStatus.PENDING) {
-            throw new IllegalStateException("요청사항은 주문이 PENDING 상태일 때만 수정할 수 있습니다.");
-        }
-    }
-
 
 }

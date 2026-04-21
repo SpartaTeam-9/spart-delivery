@@ -26,9 +26,13 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "order_id", nullable = false)
+    private UUID orderId;
+
     @Column(nullable = false)
     private UUID menuId;
 
+    @Column(nullable = false)
     private Integer quantity;
 
     @Column(name = "unit_price", nullable = false)
@@ -42,11 +46,10 @@ public class OrderItem {
     @Column(updatable = false, length = 100)
     private String createdBy;
 
-    // 이는 Order에서만 제어가 가능합니다.(PRIVATE)
     @Builder
-    private OrderItem(Order order, UUID menuId, Integer quantity, Integer unitPrice) {
+    public OrderItem(UUID orderId, UUID menuId, Integer quantity, Integer unitPrice) {
         validateQuantity(quantity);
-        this.order = order;
+        this.orderId = orderId;
         this.menuId = menuId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
@@ -58,7 +61,4 @@ public class OrderItem {
         }
     }
 
-    public Integer getSubTotal() {
-        return this.unitPrice * this.quantity;
-    }
 }
