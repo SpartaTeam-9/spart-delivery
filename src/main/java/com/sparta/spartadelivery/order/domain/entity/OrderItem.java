@@ -1,6 +1,8 @@
 package com.sparta.spartadelivery.order.domain.entity;
 
+import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.order.domain.entity.Order;
+import com.sparta.spartadelivery.order.exception.OrderErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,10 +26,6 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
     @Column(nullable = false)
     private UUID menuId;
 
@@ -44,6 +42,7 @@ public class OrderItem {
     @Column(updatable = false, length = 100)
     private String createdBy;
 
+    // 이는 Order에서만 제어가 가능합니다.(PRIVATE)
     @Builder
     private OrderItem(Order order, UUID menuId, Integer quantity, Integer unitPrice) {
         validateQuantity(quantity);
@@ -55,7 +54,11 @@ public class OrderItem {
 
     private void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
-            throw new IllegalArgumentException("구매 수량은 0보다 커야 합니다.");
+            throw new AppException(OrderErrorCode.INVALID_QUANTITY);
         }
+    }
+
+    public Integer getSubTotal() {
+        return this.unitPrice * this.quantity;
     }
 }

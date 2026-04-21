@@ -13,7 +13,11 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_CANCEL_TIMEOUT(HttpStatus.BAD_REQUEST, "주문 후 5분 이내에만 취소가 가능합니다."),
 
     ORDER_IMMUTABLE(HttpStatus.FORBIDDEN, "요청 사항은 접수 대기일 때만 수정이 가능합니다."),
-    UNAUTHORIZED_ORDER_ACCESS(HttpStatus.FORBIDDEN, "본인의 주문만 접근이 가능합니다.")
+    UNAUTHORIZED_ORDER_ACCESS(HttpStatus.FORBIDDEN, "본인의 주문만 접근이 가능합니다."),
+
+    // Order Item 관련
+
+    INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "주문 수량은 0보다 커야 합니다.")
 
     ;
 
