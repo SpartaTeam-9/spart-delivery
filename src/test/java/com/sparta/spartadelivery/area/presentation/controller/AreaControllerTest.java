@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -83,6 +84,7 @@ class AreaControllerTest {
         managerToken = authenticationToken(Role.MANAGER);
         masterToken = authenticationToken(Role.MASTER);
 
+        // JWT 필터가 WebMvcTest 범위에서 실제 인증 로직을 수행하지 않도록 다음 필터로 넘긴다.
         doAnswer(invocation -> {
             jakarta.servlet.FilterChain chain = invocation.getArgument(2);
             chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
@@ -136,6 +138,36 @@ class AreaControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("운영 지역 상세 조회 성공 시 200 OK를 반환한다")
+    void getArea() throws Exception {
+        UUID areaId = UUID.randomUUID();
+        AreaDetailResponse response = areaResponse("Gwanghwamun", "Seoul", "Jongno-gu", true);
+        given(areaService.getArea(any(UUID.class))).willReturn(response);
+
+        mockMvc.perform(get("/api/v1/areas/{areaId}", areaId)
+                        .with(authentication(managerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.name").value("Gwanghwamun"))
+                .andExpect(jsonPath("$.data.city").value("Seoul"))
+                .andExpect(jsonPath("$.data.district").value("Jongno-gu"))
+                .andExpect(jsonPath("$.data.active").value(true));
+    }
+
+    @Test
+    @DisplayName("상세 조회 대상 운영 지역이 없으면 404를 반환한다")
+    void getAreaNotFound() throws Exception {
+        UUID areaId = UUID.randomUUID();
+        given(areaService.getArea(any(UUID.class))).willThrow(new AppException(AreaErrorCode.AREA_NOT_FOUND));
+
+        mockMvc.perform(get("/api/v1/areas/{areaId}", areaId)
+                        .with(authentication(managerToken)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("운영 지역을 찾을 수 없습니다."));
     }
 
     @Test
