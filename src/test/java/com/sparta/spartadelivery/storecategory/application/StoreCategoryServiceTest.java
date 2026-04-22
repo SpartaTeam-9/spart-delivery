@@ -223,6 +223,47 @@ class StoreCategoryServiceTest {
                 .isEqualTo(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND);
     }
 
+    @Test
+    @DisplayName("MASTER 권한 사용자는 가게 카테고리를 삭제할 수 있다")
+    void deleteStoreCategoryByMaster() {
+        UUID storeCategoryId = UUID.randomUUID();
+        StoreCategory storeCategory = storeCategory("한식");
+        UserPrincipal requester = principal(Role.MASTER);
+        when(storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)).thenReturn(Optional.of(storeCategory));
+
+        storeCategoryService.deleteStoreCategory(storeCategoryId, requester);
+
+        assertThat(storeCategory.isDeleted()).isTrue();
+        assertThat(storeCategory.getDeletedBy()).isEqualTo("manager01");
+    }
+
+    @Test
+    @DisplayName("MANAGER 권한 사용자는 가게 카테고리를 삭제할 수 없다")
+    void deleteStoreCategoryByManagerDenied() {
+        UUID storeCategoryId = UUID.randomUUID();
+        UserPrincipal requester = principal(Role.MANAGER);
+
+        assertThatThrownBy(() -> storeCategoryService.deleteStoreCategory(storeCategoryId, requester))
+                .isInstanceOf(AppException.class)
+                .extracting("errorCode")
+                .isEqualTo(StoreCategoryErrorCode.STORE_CATEGORY_DELETE_ACCESS_DENIED);
+
+        verify(storeCategoryRepository, never()).findByIdAndDeletedAtIsNull(any());
+    }
+
+    @Test
+    @DisplayName("삭제할 가게 카테고리가 없으면 삭제할 수 없다")
+    void deleteStoreCategoryNotFound() {
+        UUID storeCategoryId = UUID.randomUUID();
+        UserPrincipal requester = principal(Role.MASTER);
+        when(storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> storeCategoryService.deleteStoreCategory(storeCategoryId, requester))
+                .isInstanceOf(AppException.class)
+                .extracting("errorCode")
+                .isEqualTo(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND);
+    }
+
     private StoreCategory storeCategory(String name) {
         return StoreCategory.builder()
                 .name(name)
