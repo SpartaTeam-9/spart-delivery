@@ -1,6 +1,7 @@
 package com.sparta.spartadelivery.storecategory.domain.repository;
 
 import com.sparta.spartadelivery.storecategory.domain.entity.StoreCategory;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,4 +12,6 @@ public interface StoreCategoryRepository extends JpaRepository<StoreCategory, UU
     boolean existsByNameAndDeletedAtIsNull(String name);
 
     Page<StoreCategory> findAllByDeletedAtIsNull(Pageable pageable);
+
+    Optional<StoreCategory> findByIdAndDeletedAtIsNull(UUID id);
 }
