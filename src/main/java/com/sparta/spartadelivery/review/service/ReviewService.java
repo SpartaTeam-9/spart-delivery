@@ -27,5 +27,11 @@ public class ReviewService {
         review.update(customerId, request.rating(), request.content());
     }
 
+    @Transactional
+    public void delete(UUID reviewId, String deletedBy) {
+        Review review = reviewRepository.getReferenceById(reviewId);
+        review.delete(deletedBy);
+    }
+
 }
 

@@ -26,11 +26,19 @@ public class ReviewController {
     }
 
     @PutMapping("/{reviewId}")
-    public ResponseEntity<ApiResponse<Void>> updateReview(@PathVariable UUID reviewId,
-                                                          @RequestBody ReviewUpdateRequest request,
-                                                          @AuthenticationPrincipal UserPrincipal customer) {
-        Long customerId = customer.getId();
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable UUID reviewId,
+                                                    @RequestBody ReviewUpdateRequest request,
+                                                    @AuthenticationPrincipal UserPrincipal updatedBy) {
+        Long customerId = updatedBy.getId();
         reviewService.update(reviewId, customerId, request);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), null));
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID reviewId,
+                                                    @AuthenticationPrincipal UserPrincipal deletedBy) {
+        String deletedByName = deletedBy.getUsername();
+        reviewService.delete(reviewId, deletedByName);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), null));
     }
 }
