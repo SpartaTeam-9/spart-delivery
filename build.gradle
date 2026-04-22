@@ -77,3 +77,17 @@ jacocoTestReport {
         csv.required = false
     }
 }
+
+def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+tasks.withType(JavaCompile).configureEach {
+    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
+}
+
+sourceSets {
+    main.java.srcDirs += [ querydslDir ]
+}
+
+clean {
+    delete file(querydslDir)
+}
