@@ -5,10 +5,12 @@ import com.sparta.spartadelivery.order.domain.entity.Order;
 import com.sparta.spartadelivery.store.domain.entity.Store;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Getter
 @Entity
 public class Review extends BaseEntity {
 
@@ -67,9 +69,9 @@ public class Review extends BaseEntity {
 //        }
     }
 
-//    public void update(String userName, int rating, String content) {
+//    public void update(Long userId, int rating, String content) {
 //        validate();
-//        if (this.customerId.equals(userName)) {
+//        if (this.customer.getId().equals(userId)) {
 //            this.rating = rating;
 //            this.content = content;
 //        }
