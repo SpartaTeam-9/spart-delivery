@@ -4,9 +4,11 @@ import com.sparta.spartadelivery.area.application.service.AreaService;
 import com.sparta.spartadelivery.area.presentation.dto.request.AreaCreateRequest;
 import com.sparta.spartadelivery.area.presentation.dto.request.AreaUpdateRequest;
 import com.sparta.spartadelivery.area.presentation.dto.response.AreaDetailResponse;
+import com.sparta.spartadelivery.area.presentation.dto.response.AreaPageResponse;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,7 +47,7 @@ public class AreaController {
                     **처리 정책**
 
                     - 삭제되지 않은 운영 지역 중 같은 지역명이 있으면 등록할 수 없습니다.
-                    - active 값을 생략하면 기본값 true로 등록됩니다.
+                    - active 값을 생략하면 기본값 true로 등록합니다.
                     """
     )
     @PostMapping
@@ -58,9 +61,38 @@ public class AreaController {
     }
 
     @Operation(
+            summary = "운영 지역 목록 조회 API",
+            description = """
+                    운영 지역 목록을 페이지네이션으로 조회합니다.
+
+                    **요청 가능 권한**
+
+                    - ALL
+
+                    **처리 정책**
+
+                    - 삭제되지 않은 운영 지역만 조회할 수 있습니다.
+                    - 기본 정렬은 createdAt,DESC 입니다.
+                    - size는 10, 30, 50 중 하나만 사용할 수 있습니다.
+                    """
+    )
+    @GetMapping
+    public ResponseEntity<ApiResponse<AreaPageResponse>> getAreas(
+            @Parameter(description = "페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "정렬 조건", example = "createdAt,DESC")
+            @RequestParam(required = false) String sort
+    ) {
+        AreaPageResponse response = areaService.getAreas(page, size, sort);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), response));
+    }
+
+    @Operation(
             summary = "운영 지역 상세 조회 API",
             description = """
-                    운영 지역 상세 정보를 조회합니다.
+                    운영 지역의 상세 정보를 조회합니다.
 
                     **요청 가능 권한**
 
