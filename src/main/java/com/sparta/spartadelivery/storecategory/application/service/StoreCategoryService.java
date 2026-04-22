@@ -60,9 +60,16 @@ public class StoreCategoryService {
     }
 
     public StoreCategoryDetailResponse getStoreCategory(UUID storeCategoryId) {
-        StoreCategory storeCategory = storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)
-                .orElseThrow(() -> new AppException(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND));
+        StoreCategory storeCategory = getActiveStoreCategory(storeCategoryId);
         return StoreCategoryDetailResponse.from(storeCategory);
+    }
+
+    @Transactional
+    public void deleteStoreCategory(UUID storeCategoryId, UserPrincipal requester) {
+        validateDeletePermission(requester);
+
+        StoreCategory storeCategory = getActiveStoreCategory(storeCategoryId);
+        storeCategory.markDeleted(requester.getAccountName());
     }
 
     private void validateCreatePermission(UserPrincipal requester) {
@@ -76,6 +83,18 @@ public class StoreCategoryService {
         if (storeCategoryRepository.existsByNameAndDeletedAtIsNull(name)) {
             throw new AppException(StoreCategoryErrorCode.DUPLICATE_STORE_CATEGORY_NAME);
         }
+    }
+
+    private void validateDeletePermission(UserPrincipal requester) {
+        if (requester.getRole() == Role.MASTER) {
+            return;
+        }
+        throw new AppException(StoreCategoryErrorCode.STORE_CATEGORY_DELETE_ACCESS_DENIED);
+    }
+
+    private StoreCategory getActiveStoreCategory(UUID storeCategoryId) {
+        return storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)
+                .orElseThrow(() -> new AppException(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND));
     }
 
     private String normalizeSort(String sort) {
