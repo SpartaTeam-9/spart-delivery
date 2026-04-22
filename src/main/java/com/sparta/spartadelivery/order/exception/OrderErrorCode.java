@@ -16,6 +16,12 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_IMMUTABLE(HttpStatus.FORBIDDEN, "요청 사항은 접수 대기일 때만 수정이 가능합니다."),
     UNAUTHORIZED_ORDER_ACCESS(HttpStatus.FORBIDDEN, "본인의 주문만 접근이 가능합니다."),
 
+
+    // query 관련
+
+    INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "SEARCH 시 가능한 페이지 수는 10, 30, 50입니다."),
+    ORDER_SEARCH_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 검색 권한이 없습니다."),
+
     // Order Item 관련
 
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "주문 수량은 0보다 커야 합니다."),

@@ -3,8 +3,8 @@ package com.sparta.spartadelivery.order.domain.repository;
 import com.sparta.spartadelivery.order.domain.entity.Order;
 import com.sparta.spartadelivery.order.presentation.dto.request.SearchOrdersVO;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.awt.print.Pageable;
 
 public interface OrderQueryRepository {
 
