@@ -16,6 +16,7 @@ import com.sparta.spartadelivery.storecategory.exception.StoreCategoryErrorCode;
 import com.sparta.spartadelivery.storecategory.presentation.dto.request.StoreCategoryCreateRequest;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -196,6 +197,30 @@ class StoreCategoryServiceTest {
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
                 .isEqualTo(StoreCategoryErrorCode.STORE_CATEGORY_LIST_UNSUPPORTED_SORT_DIRECTION);
+    }
+
+    @Test
+    @DisplayName("가게 카테고리 상세 정보를 조회할 수 있다")
+    void getStoreCategory() {
+        UUID storeCategoryId = UUID.randomUUID();
+        StoreCategory storeCategory = storeCategory("한식");
+        when(storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)).thenReturn(Optional.of(storeCategory));
+
+        var response = storeCategoryService.getStoreCategory(storeCategoryId);
+
+        assertThat(response.name()).isEqualTo("한식");
+    }
+
+    @Test
+    @DisplayName("상세 조회 대상 가게 카테고리가 없으면 조회할 수 없다")
+    void getStoreCategoryNotFound() {
+        UUID storeCategoryId = UUID.randomUUID();
+        when(storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> storeCategoryService.getStoreCategory(storeCategoryId))
+                .isInstanceOf(AppException.class)
+                .extracting("errorCode")
+                .isEqualTo(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND);
     }
 
     private StoreCategory storeCategory(String name) {
