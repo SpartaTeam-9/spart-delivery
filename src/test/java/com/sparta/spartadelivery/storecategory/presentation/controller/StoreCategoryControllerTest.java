@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,8 +18,11 @@ import com.sparta.spartadelivery.storecategory.application.service.StoreCategory
 import com.sparta.spartadelivery.storecategory.exception.StoreCategoryErrorCode;
 import com.sparta.spartadelivery.storecategory.presentation.dto.request.StoreCategoryCreateRequest;
 import com.sparta.spartadelivery.storecategory.presentation.dto.response.StoreCategoryDetailResponse;
+import com.sparta.spartadelivery.storecategory.presentation.dto.response.StoreCategoryListResponse;
+import com.sparta.spartadelivery.storecategory.presentation.dto.response.StoreCategoryPageResponse;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -130,8 +134,59 @@ class StoreCategoryControllerTest {
                 .andExpect(jsonPath("$.message").value("VALIDATION_ERROR"));
     }
 
+    @Test
+    @DisplayName("가게 카테고리 목록 조회 성공 시 200 OK를 반환한다")
+    void getStoreCategories() throws Exception {
+        StoreCategoryPageResponse response = new StoreCategoryPageResponse(
+                List.of(
+                        storeCategoryListResponse("한식"),
+                        storeCategoryListResponse("치킨")
+                ),
+                0,
+                10,
+                2,
+                1,
+                "createdAt,DESC"
+        );
+        given(storeCategoryService.getStoreCategories(0, 10, null)).willReturn(response);
+
+        mockMvc.perform(get("/api/v1/store-categories")
+                        .with(authentication(managerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content.length()").value(2))
+                .andExpect(jsonPath("$.data.content[0].name").value("한식"))
+                .andExpect(jsonPath("$.data.content[1].name").value("치킨"))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.sort").value("createdAt,DESC"));
+    }
+
+    @Test
+    @DisplayName("가게 카테고리 목록 조회 시 잘못된 페이지 번호면 400을 반환한다")
+    void getStoreCategoriesWithInvalidPageNumber() throws Exception {
+        given(storeCategoryService.getStoreCategories(-1, 10, null))
+                .willThrow(new AppException(StoreCategoryErrorCode.STORE_CATEGORY_LIST_INVALID_PAGE_NUMBER));
+
+        mockMvc.perform(get("/api/v1/store-categories")
+                        .with(authentication(managerToken))
+                        .param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("페이지 번호는 0 이상이어야 합니다."));
+    }
+
     private StoreCategoryDetailResponse storeCategoryResponse(String name) {
         return new StoreCategoryDetailResponse(
+                UUID.randomUUID(),
+                name,
+                LocalDateTime.now()
+        );
+    }
+
+    private StoreCategoryListResponse storeCategoryListResponse(String name) {
+        return new StoreCategoryListResponse(
                 UUID.randomUUID(),
                 name,
                 LocalDateTime.now()
