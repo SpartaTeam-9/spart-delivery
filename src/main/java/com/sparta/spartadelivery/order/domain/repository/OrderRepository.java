@@ -10,6 +10,4 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    @Query("SELECT o FROM Order o WHERE o.id = :id AND o.deletedAt IS NULL")
-    Optional<Order> findActiveOrderById(@Param("id") UUID id);
 }
