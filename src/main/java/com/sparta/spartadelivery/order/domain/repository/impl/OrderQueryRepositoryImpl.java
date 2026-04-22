@@ -13,8 +13,8 @@ import java.awt.print.Pageable;
 @RequiredArgsConstructor
 public class OrderQueryRepositoryImpl implements OrderQueryRepository {
 
-    private final JPAQueryFactory queryFactory;
-    private static final QOrder order = QOrder.order;
+    //private final JPAQueryFactory queryFactory;
+    //private static final QOrder order = QOrder.order;
 
     @Override
     public Page<Order> searchOrders(SearchOrdersVO searchOrdersVO, Pageable pageable) {

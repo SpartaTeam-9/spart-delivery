@@ -19,6 +19,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     // private final OrderItemUseCase orderItemUsecase;
 
+    /*
     public OrderResponse createOrder(Long customerId, CreateOrderRequest request) {
 
     }
@@ -47,6 +48,8 @@ public class OrderService {
         // only master
     }
 
+
+     */
 
 
 }
