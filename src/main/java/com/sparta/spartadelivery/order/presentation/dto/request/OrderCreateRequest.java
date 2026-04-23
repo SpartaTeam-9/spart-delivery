@@ -14,7 +14,7 @@ public record OrderCreateRequest(
         UUID storeId,
 
         @NotNull
-        Long addressId,
+        UUID addressId,
 
         @NotNull
         OrderType orderType,

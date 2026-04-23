@@ -79,6 +79,10 @@ public class Order extends BaseEntity {
         this.status = OrderStatus.CANCELED;
     }
 
+    public void updateRequest(String request) {
+        this.request = request;
+    }
+
 
     //** private method **//
     @Builder
