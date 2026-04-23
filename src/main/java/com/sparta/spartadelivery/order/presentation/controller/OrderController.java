@@ -2,6 +2,7 @@ package com.sparta.spartadelivery.order.presentation.controller;
 
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
+import com.sparta.spartadelivery.order.application.OrderOwnerService;
 import com.sparta.spartadelivery.order.application.OrderService;
 import com.sparta.spartadelivery.order.presentation.dto.request.OrderCreateRequest;
 import com.sparta.spartadelivery.order.presentation.dto.request.UpdateOrderRequest;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderOwnerService orderOwnerService;
 
     @Operation(
             summary = "주문 생성 API",
@@ -99,6 +101,24 @@ public class OrderController {
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(ApiResponse.success(HttpStatus.NO_CONTENT.value(), "DELETED", null));
+    }
+
+    @Operation(
+            summary = "주문 상태 변경 API",
+            description = """
+                    OWNER: 본인의 매장일 경우 순차적으로 변경할 수 있습니다.
+                    
+                    MASTER, MANAGER도 변경할 수 있습니다.
+                    """
+    )
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<ApiResponse<?>> updateOrderStatus (
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @PathVariable UUID orderId
+    ) {
+        orderOwnerService.updateOrderStatus(userPrincipal.getId(), orderId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(HttpStatus.OK.value(), "SUCCESS", null));
     }
 
 }

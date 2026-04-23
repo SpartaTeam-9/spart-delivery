@@ -18,6 +18,9 @@ public enum OrderErrorCode implements BaseErrorCode {
     ORDER_IMMUTABLE(HttpStatus.FORBIDDEN, "요청 사항은 접수 대기일 때만 수정이 가능합니다."),
     UNAUTHORIZED_ORDER_ACCESS(HttpStatus.FORBIDDEN, "본인의 주문만 접근이 가능합니다."),
 
+    ALREADY_DELIVERED(HttpStatus.BAD_REQUEST, "이미 배달이 완료되었습니다."),
+
+    ORDER_ALREADY_CANCLED(HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다."),
 
     // query 관련
 

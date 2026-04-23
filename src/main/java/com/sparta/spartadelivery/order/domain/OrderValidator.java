@@ -12,6 +12,7 @@ import com.sparta.spartadelivery.order.domain.entity.OrderStatus;
 import com.sparta.spartadelivery.order.exception.OrderErrorCode;
 import com.sparta.spartadelivery.order.presentation.dto.request.OrderCreateRequest;
 import com.sparta.spartadelivery.order.presentation.dto.request.OrderItemRequest;
+import com.sparta.spartadelivery.store.domain.entity.Store;
 import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
@@ -49,6 +50,28 @@ public class OrderValidator {
         if (!Objects.equals(order.getCustomerId(), requestUserId)) {
             throw new AppException(OrderErrorCode.UNAUTHORIZED_ORDER_ACCESS);
         }
+
+    }
+
+    public void validUpdateOrderStatus(Long requestUserId, Order order) {
+
+        UserEntity user = userRepository.findById(requestUserId)
+                .orElseThrow(() -> new AppException(AuthErrorCode.USER_NOT_FOUND));
+
+        if (user.getRole() == Role.MASTER || user.getRole() == Role.MANAGER) {
+            return;
+        }
+
+        if (user.getRole() == Role.OWNER) {
+            Store store = storeRepository.findById(order.getStoreId())
+                    .orElseThrow(() -> new AppException(OrderErrorCode.UNAUTHORIZED_ORDER_ACCESS));
+
+            if (Objects.equals(store.getOwner().getId(), requestUserId)) {
+                return;
+            }
+        }
+
+        throw new AppException(OrderErrorCode.UNAUTHORIZED_ORDER_ACCESS);
 
     }
 

@@ -83,6 +83,9 @@ public class Order extends BaseEntity {
         this.request = request;
     }
 
+    public void updateOrderStatus() {
+        this.status = this.status.getNextStatus();
+    }
 
     //** private method **//
     @Builder
