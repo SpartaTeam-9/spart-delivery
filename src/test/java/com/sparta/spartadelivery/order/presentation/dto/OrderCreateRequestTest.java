@@ -89,6 +89,6 @@ public class OrderCreateRequestTest {
 
         // then
         assertThat(violations).hasSize(1);
-        assertThat(violations.iterator().next().getMessage()).isEqualTo("널이어서는 안됩니다");
+        assertThat(violations.iterator().next().getMessage()).isEqualTo("orderItem 은 존재해야 합니다.");
     }
 }

@@ -22,7 +22,7 @@ public record OrderCreateRequest(
 
         String request,
 
-        @NotNull @Valid
+        @NotNull(message = "orderItem 은 존재해야 합니다.") @Valid
         List<OrderItemRequest> orderItems
 ) {
 
