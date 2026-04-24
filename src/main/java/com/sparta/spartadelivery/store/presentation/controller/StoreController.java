@@ -1,0 +1,59 @@
+package com.sparta.spartadelivery.store.presentation.controller;
+
+import com.sparta.spartadelivery.global.presentation.dto.ApiResponse;
+import com.sparta.spartadelivery.store.application.service.StoreService;
+import com.sparta.spartadelivery.store.presentation.dto.response.StorePageResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/stores")
+@RequiredArgsConstructor
+@Tag(name = "Store", description = "가게 관리 API")
+public class StoreController {
+
+    private final StoreService storeService;
+
+    @Operation(
+            summary = "가게 목록 조회 API",
+            description = """
+                    가게 목록을 페이지네이션 형태로 조회합니다.
+
+                    **요청 가능 권한**
+
+                    - ALL
+
+                    **처리 정책**
+
+                    - 삭제되지 않은 가게만 조회합니다.
+                    - 기본 정렬은 createdAt,DESC 입니다.
+                    - size는 10, 30, 50 중 하나만 사용할 수 있습니다.
+                    - sort는 `{필드명},{정렬방향}` 형식으로 전달합니다.
+                    - 정렬 가능 필드: `name`, `averageRating`, `createdAt`, `updatedAt`
+                    - 정렬 방향: `ASC`, `DESC`
+                    """
+    )
+    @GetMapping
+    public ResponseEntity<ApiResponse<StorePageResponse>> getStores(
+            @Parameter(description = "페이지 번호", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기 (허용값: 10, 30, 50)", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(
+                    description = "정렬 조건 (`{필드명},{정렬방향}` 형식, 허용 필드: name, averageRating, createdAt, updatedAt / 방향: ASC, DESC)",
+                    example = "createdAt,DESC"
+            )
+            @RequestParam(required = false) String sort
+    ) {
+        StorePageResponse response = storeService.getStores(page, size, sort);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), response));
+    }
+}
