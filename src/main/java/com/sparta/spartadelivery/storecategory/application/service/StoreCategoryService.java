@@ -6,6 +6,7 @@ import com.sparta.spartadelivery.storecategory.domain.entity.StoreCategory;
 import com.sparta.spartadelivery.storecategory.domain.repository.StoreCategoryRepository;
 import com.sparta.spartadelivery.storecategory.exception.StoreCategoryErrorCode;
 import com.sparta.spartadelivery.storecategory.presentation.dto.request.StoreCategoryCreateRequest;
+import com.sparta.spartadelivery.storecategory.presentation.dto.request.StoreCategoryUpdateRequest;
 import com.sparta.spartadelivery.storecategory.presentation.dto.response.StoreCategoryDetailResponse;
 import com.sparta.spartadelivery.storecategory.presentation.dto.response.StoreCategoryPageResponse;
 import com.sparta.spartadelivery.user.domain.entity.Role;
@@ -53,6 +54,7 @@ public class StoreCategoryService {
     public StoreCategoryPageResponse getStoreCategories(int page, int size, String sort) {
         String normalizedSort = normalizeSort(sort);
         Pageable pageable = createPageable(page, size, normalizedSort);
+
         return StoreCategoryPageResponse.from(
                 storeCategoryRepository.findAllByDeletedAtIsNull(pageable),
                 normalizedSort
@@ -60,9 +62,34 @@ public class StoreCategoryService {
     }
 
     public StoreCategoryDetailResponse getStoreCategory(UUID storeCategoryId) {
-        StoreCategory storeCategory = storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)
-                .orElseThrow(() -> new AppException(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND));
+        return StoreCategoryDetailResponse.from(getActiveStoreCategory(storeCategoryId));
+    }
+
+    @Transactional
+    public StoreCategoryDetailResponse updateStoreCategory(
+            UUID storeCategoryId,
+            StoreCategoryUpdateRequest request,
+            UserPrincipal requester
+    ) {
+        validateUpdatePermission(requester);
+
+        StoreCategory storeCategory = getActiveStoreCategory(storeCategoryId);
+        String name = request.name().strip();
+
+        if (!storeCategory.getName().equals(name)) {
+            validateDuplicateName(name);
+        }
+
+        storeCategory.update(name);
         return StoreCategoryDetailResponse.from(storeCategory);
+    }
+
+    @Transactional
+    public void deleteStoreCategory(UUID storeCategoryId, UserPrincipal requester) {
+        validateDeletePermission(requester);
+
+        StoreCategory storeCategory = getActiveStoreCategory(storeCategoryId);
+        storeCategory.markDeleted(requester.getAccountName());
     }
 
     private void validateCreatePermission(UserPrincipal requester) {
@@ -72,10 +99,29 @@ public class StoreCategoryService {
         throw new AppException(StoreCategoryErrorCode.STORE_CATEGORY_CREATE_ACCESS_DENIED);
     }
 
+    private void validateUpdatePermission(UserPrincipal requester) {
+        if (requester.getRole() == Role.MANAGER || requester.getRole() == Role.MASTER) {
+            return;
+        }
+        throw new AppException(StoreCategoryErrorCode.STORE_CATEGORY_UPDATE_ACCESS_DENIED);
+    }
+
+    private void validateDeletePermission(UserPrincipal requester) {
+        if (requester.getRole() == Role.MASTER) {
+            return;
+        }
+        throw new AppException(StoreCategoryErrorCode.STORE_CATEGORY_DELETE_ACCESS_DENIED);
+    }
+
     private void validateDuplicateName(String name) {
         if (storeCategoryRepository.existsByNameAndDeletedAtIsNull(name)) {
             throw new AppException(StoreCategoryErrorCode.DUPLICATE_STORE_CATEGORY_NAME);
         }
+    }
+
+    private StoreCategory getActiveStoreCategory(UUID storeCategoryId) {
+        return storeCategoryRepository.findByIdAndDeletedAtIsNull(storeCategoryId)
+                .orElseThrow(() -> new AppException(StoreCategoryErrorCode.STORE_CATEGORY_NOT_FOUND));
     }
 
     private String normalizeSort(String sort) {
