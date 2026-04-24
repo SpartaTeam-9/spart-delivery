@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum StoreErrorCode implements BaseErrorCode {
+    STORE_ADMIN_LIST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "관리자용 가게 목록을 조회할 권한이 없습니다."),
     STORE_LIST_INVALID_PAGE_NUMBER(HttpStatus.BAD_REQUEST, "페이지 번호는 0 이상이어야 합니다."),
     STORE_LIST_INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "페이지 크기는 10, 30, 50 중 하나여야 합니다."),
     STORE_LIST_INVALID_SORT_FORMAT(HttpStatus.BAD_REQUEST, "정렬 조건은 {property},{direction} 형식이어야 합니다."),

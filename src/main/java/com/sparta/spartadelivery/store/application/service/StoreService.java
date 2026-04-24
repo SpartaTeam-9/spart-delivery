@@ -1,9 +1,11 @@
 package com.sparta.spartadelivery.store.application.service;
 
 import com.sparta.spartadelivery.global.exception.AppException;
+import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.store.exception.StoreErrorCode;
 import com.sparta.spartadelivery.store.presentation.dto.response.StorePageResponse;
+import com.sparta.spartadelivery.user.domain.entity.Role;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -33,9 +35,28 @@ public class StoreService {
         Pageable pageable = createPageable(page, size, normalizedSort);
 
         return StorePageResponse.from(
+                storeRepository.findAllPublicStores(pageable),
+                normalizedSort
+        );
+    }
+
+    public StorePageResponse getAdminStores(UserPrincipal requester, int page, int size, String sort) {
+        validateAdminListPermission(requester);
+
+        String normalizedSort = normalizeSort(sort);
+        Pageable pageable = createPageable(page, size, normalizedSort);
+
+        return StorePageResponse.from(
                 storeRepository.findAllByDeletedAtIsNull(pageable),
                 normalizedSort
         );
+    }
+
+    private void validateAdminListPermission(UserPrincipal requester) {
+        if (requester.getRole() == Role.MANAGER || requester.getRole() == Role.MASTER) {
+            return;
+        }
+        throw new AppException(StoreErrorCode.STORE_ADMIN_LIST_ACCESS_DENIED);
     }
 
     private String normalizeSort(String sort) {
