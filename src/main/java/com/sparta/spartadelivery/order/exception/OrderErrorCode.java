@@ -25,6 +25,7 @@ public enum OrderErrorCode implements BaseErrorCode {
     // query 관련
 
     INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "SEARCH 시 가능한 페이지 수는 10, 30, 50입니다."),
+    INVALID_SORT_QUERY(HttpStatus.BAD_REQUEST, "SEARCH 시 createdAt 또는 totalPrice 만 정렬이 가능합니다."),
     ORDER_SEARCH_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 검색 권한이 없습니다."),
 
     // Order Item 관련
