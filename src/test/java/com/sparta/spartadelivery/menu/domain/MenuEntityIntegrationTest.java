@@ -3,13 +3,13 @@ package com.sparta.spartadelivery.menu.domain;
 import com.sparta.spartadelivery.menu.domain.entity.*;
 import com.sparta.spartadelivery.menu.domain.repository.*;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 // @Transactional // h2 data rollback 되지 않음, 로컬에 저장, inserted data 확인용

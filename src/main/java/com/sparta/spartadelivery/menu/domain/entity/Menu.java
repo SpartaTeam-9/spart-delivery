@@ -39,7 +39,7 @@ public class Menu extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String menuPictureUrl;
 
-    @Column(name = "is_hidden", nullable = false)
+    @Column(nullable = false)
     private Boolean isHidden = false;
 
     @Column(columnDefinition = "TEXT")

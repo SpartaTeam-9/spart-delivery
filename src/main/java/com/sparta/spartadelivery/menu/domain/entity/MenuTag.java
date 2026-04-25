@@ -20,11 +20,11 @@ public class MenuTag extends BaseEntity {
     private UUID id;
 
     // 메뉴 (N : 1)
-    @Column(name = "menu_id", nullable = false)
+    @Column(nullable = false)
     private UUID menuId;
 
     // 태그 (N : 1)
-    @Column(name = "tag_id", nullable = false)
+    @Column(nullable = false)
     private UUID tagId;
 
     public MenuTag(UUID menuId, UUID tagId) {

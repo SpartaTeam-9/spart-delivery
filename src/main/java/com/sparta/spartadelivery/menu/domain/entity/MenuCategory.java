@@ -19,7 +19,7 @@ public class MenuCategory extends BaseEntity {
     @Column(name = "menu_category_id")
     private UUID id;
 
-    @Column(length = 50, nullable = false, unique = true)
+    @Column(length = 50, nullable = false)
     private String name;
 
     // 해당 메뉴 카테고리를 가진 가게 (N : 1)
