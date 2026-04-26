@@ -1,6 +1,7 @@
 package com.sparta.spartadelivery.menu.domain.entity;
 
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.menu.domain.vo.MenuTagVO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,16 +20,18 @@ public class MenuTag extends BaseEntity {
     @Column(name = "menu_tag_id")
     private UUID id;
 
-    // 메뉴 (N : 1)
-    @Column(nullable = false)
-    private UUID menuId;
+    @Embedded
+    private MenuTagVO menuTagInfo;
 
-    // 태그 (N : 1)
-    @Column(nullable = false)
-    private UUID tagId;
+    private MenuTag(MenuTagVO vo) {
+        this.menuTagInfo = vo;
+    }
 
-    public MenuTag(UUID menuId, UUID tagId) {
-        this.menuId = menuId;
-        this.tagId = tagId;
+    public static MenuTag from(MenuTagVO vo) {
+        return new MenuTag(vo);
+    }
+
+    public void update(MenuTagVO vo) {
+        this.menuTagInfo = vo;
     }
 }

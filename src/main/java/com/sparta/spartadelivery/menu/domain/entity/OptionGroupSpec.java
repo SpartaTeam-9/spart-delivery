@@ -1,6 +1,8 @@
 package com.sparta.spartadelivery.menu.domain.entity;
 
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.menu.domain.vo.MoneyVO;
+import com.sparta.spartadelivery.menu.domain.vo.SelectionRangeVO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,21 +29,18 @@ public class OptionGroupSpec extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column // Default 0
-    private Integer minSelect;
-
-    @Column // Default 1
-    private Integer maxSelect;
+    @Embedded
+    private SelectionRangeVO selectionRange;
 
     public OptionGroupSpec(Menu menu, String name, Integer minSelect, Integer maxSelect) {
         this.menu = menu;
         this.name = name;
-        this.minSelect = (minSelect != null) ? minSelect : 0;
-        this.maxSelect = (maxSelect != null) ? maxSelect : 1;
+        this.selectionRange = new SelectionRangeVO(minSelect, maxSelect);
     }
 
-    // 생성 팩토리
-    public static OptionGroupSpec createOptionGroupSpec(Menu menu, String name, Integer minSelect, Integer maxSelect) {
-        return  new OptionGroupSpec(menu, name, minSelect, maxSelect);
+    public void update(Menu menu, String name, Integer minSelect, Integer maxSelect) {
+        this.menu = menu;
+        this.name = name;
+        this.selectionRange = new SelectionRangeVO(minSelect, maxSelect);
     }
 }

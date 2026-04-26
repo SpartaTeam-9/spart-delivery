@@ -1,6 +1,7 @@
 package com.sparta.spartadelivery.menu.domain.entity;
 
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.menu.domain.vo.MoneyVO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,8 +31,8 @@ public class Menu extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private Integer price;
+    @Embedded
+    private MoneyVO price;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -39,8 +40,8 @@ public class Menu extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String menuPictureUrl;
 
-    @Column(nullable = false)
-    private Boolean isHidden = false;
+    @Column // Default false
+    private boolean isHidden;
 
     @Column(columnDefinition = "TEXT")
     private String aiDescription;
@@ -48,24 +49,55 @@ public class Menu extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String aiPrompt;
 
-    public Menu(UUID storeId,
-                UUID menuCategoryId,
-                String name,
-                Integer price,
-                String description,
-                String menuPictureUrl,
-                Boolean isHidden,
-                String aiDescription,
-                String aiPrompt) {
+    public Menu(
+            UUID storeId,
+            UUID menuCategoryId,
+            String name,
+            Integer price,
+            String description,
+            String menuPictureUrl,
+            boolean isHidden,
+            String aiDescription,
+            String aiPrompt) {
 
         this.storeId = storeId;
         this.menuCategoryId = menuCategoryId;
         this.name = name;
-        this.price = price;
+        this.price = new MoneyVO(price);
         this.description = description;
         this.menuPictureUrl = menuPictureUrl;
         this.isHidden = isHidden;
         this.aiDescription = aiDescription;
         this.aiPrompt = aiPrompt;
+    }
+
+    public void update(
+            UUID storeId,
+            UUID menuCategoryId,
+            String name,
+            Integer price,
+            String description,
+            String menuPictureUrl,
+            boolean isHidden,
+            String aiDescription,
+            String aiPrompt) {
+
+        this.storeId = storeId;
+        this.menuCategoryId = menuCategoryId;
+        this.name = name;
+        this.price = new  MoneyVO(price);
+        this.description = description;
+        this.menuPictureUrl = menuPictureUrl;
+        this.isHidden = isHidden;
+        this.aiDescription = aiDescription;
+        this.aiPrompt = aiPrompt;
+    }
+
+    public void hide() {
+        this.isHidden = true;
+    }
+
+    public void show() {
+        this.isHidden = false;
     }
 }

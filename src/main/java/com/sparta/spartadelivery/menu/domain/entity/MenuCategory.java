@@ -19,12 +19,12 @@ public class MenuCategory extends BaseEntity {
     @Column(name = "menu_category_id")
     private UUID id;
 
-    @Column(length = 50, nullable = false)
-    private String name;
-
     // 해당 메뉴 카테고리를 가진 가게 (N : 1)
     @Column(nullable = false)
     private UUID storeId;
+
+    @Column(length = 50, nullable = false)
+    private String name;
 
     /*
 
@@ -35,8 +35,13 @@ public class MenuCategory extends BaseEntity {
 
      */
 
-    public MenuCategory(String name, UUID storeId) {
-        this.name = name;
+    public MenuCategory(UUID storeId, String name) {
         this.storeId = storeId;
+        this.name = name;
+    }
+
+    public void update(UUID storeId, String name) {
+        this.storeId = storeId;
+        this.name = name;
     }
 }

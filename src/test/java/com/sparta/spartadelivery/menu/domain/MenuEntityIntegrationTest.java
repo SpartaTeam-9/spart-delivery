@@ -2,6 +2,8 @@ package com.sparta.spartadelivery.menu.domain;
 
 import com.sparta.spartadelivery.menu.domain.entity.*;
 import com.sparta.spartadelivery.menu.domain.repository.*;
+import com.sparta.spartadelivery.menu.domain.vo.MenuTagVO;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,8 +14,10 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-// @Transactional // h2 data rollback 되지 않음, 로컬에 저장, inserted data 확인용
-@ActiveProfiles("test-h2") // test-h2 yaml 파일 적용
+@Transactional
+//@ActiveProfiles("test-h2")
+// test-h2 yaml 파일 적용 [data가 들어가는지 확인하려면 Transactional이 없어야 한다]
+// 추후 Tag unique 중복 오류 해결
 class MenuEntityIntegrationTest {
     @Autowired
     private MenuRepository menuRepo;
@@ -33,67 +37,115 @@ class MenuEntityIntegrationTest {
     @Autowired
     private OptionSpecRepository optionSpecRepo;
 
+    // Entity와 Repo를 이용하여 save만 확인한다.
+    // 추후 Entity Repo Test 분리, test case 추가
+
+    // Menu Tag MenuTag 분리 / OptionGroupSpec OptionSpec 분리
+
     @Test
-    void 전체_엔티티_저장_조회_통합테스트() {
+    void 메뉴카테고리_저장() {
+        // Given
+        UUID storeId = UUID.randomUUID();
+        String name = "치킨메뉴";
 
-        // 1) MenuCategory 저장
-        MenuCategory category = new MenuCategory(
-                "카테고리",
-                UUID.randomUUID()
-        );
+        // When
+        MenuCategory category = new MenuCategory(storeId, name);
         MenuCategory savedCategory = menuCategoryRepo.save(category);
-        assertNotNull(savedCategory.getId());
 
-        // 2) Menu 저장
+        // Then
+        assertNotNull(savedCategory.getId());
+    }
+
+    @Test
+    void 메뉴_Tag_저장() {
+        // Menu Given
+        UUID storeId = UUID.randomUUID();
+        UUID menuCategoryId = UUID.randomUUID();
+        String name = "뿌링클";
+        Integer price = 18000;
+        String description = "맛있는 치킨";
+        String menuPictureUrl = "http://image.com";
+        boolean isHidden = false;
+        String aiDescription = "AI 설명";
+        String aiPrompt = "AI 프롬프트";
+
+        // Tag Given
+        String tagName = "인기";
+
+        // MenuTag Given
+        // savedMenu;
+        // savedTag;
+
+
+        // Menu When
         Menu menu = new Menu(
-                UUID.randomUUID(),
-                savedCategory.getId(),
-                "테스트메뉴",
-                10000,
-                "설명",
-                "http://image.com",
-                false,
-                "ai desc",
-                "ai prompt"
+                storeId,
+                menuCategoryId,
+                name,
+                price,
+                description,
+                menuPictureUrl,
+                isHidden,
+                aiDescription,
+                aiPrompt
         );
         Menu savedMenu = menuRepo.save(menu);
-        assertNotNull(savedMenu.getId());
 
-        // 3) Tag 저장
-        Tag tag = new Tag("매운맛");
+        // Tag When
+        Tag tag = new Tag(tagName);
         Tag savedTag = tagRepo.save(tag);
-        assertNotNull(savedTag.getId());
 
-        // 4) MenuTag 저장
-        MenuTag menuTag = new MenuTag(savedMenu.getId(), savedTag.getId());
+        // MenuTag When
+        MenuTagVO vo = new MenuTagVO(savedMenu.getId(), savedTag.getId());
+        MenuTag menuTag = MenuTag.from(vo);
         MenuTag savedMenuTag = menuTagRepo.save(menuTag);
+
+
+        // Then
+        assertNotNull(savedMenu.getId());
+        assertNotNull(savedTag.getId());
         assertNotNull(savedMenuTag.getId());
+    }
 
-        // 5) OptionGroupSpec 저장
-        OptionGroupSpec group = new OptionGroupSpec(
-                savedMenu,
-                "옵션그룹",
-                null,
-                null
+
+    @Test
+    void Option_저장() {
+        // Before
+        Menu menu = new Menu(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "뿌링클",
+                18000,
+                "맛있는 치킨",
+                "http://image.com",
+                false,
+                "AI 설명",
+                "AI 프롬프트"
         );
+        Menu savedMenu = menuRepo.save(menu);
+
+
+        // OptionGroupSpec Given & When
+        String groupName = "음료추가";
+        Integer minSelect = 0;
+        Integer maxSelect = 1;
+
+        OptionGroupSpec group = new OptionGroupSpec(savedMenu, groupName, minSelect, maxSelect);
         OptionGroupSpec savedGroup = optionGroupSpecRepo.save(group);
-        OptionGroupSpec foundGroup = optionGroupSpecRepo.findById(savedGroup.getId()).get();
 
-        assertNotNull(savedGroup.getId());
-        assertNotNull(foundGroup.getMinSelect());
-        assertNotNull(foundGroup.getMaxSelect());
 
-        System.out.println("min값 " + foundGroup.getMinSelect());
-        System.out.println("max값 " + foundGroup.getMaxSelect());
+        // OptionSpec Given & When
+        // OptionGroupSpec savedGroup;
+        String optionName = "콜라 1L";
+        Integer price = 3000;
+        boolean isDefault = false;
 
-        // 6) OptionSpec 저장
-        OptionSpec option = new OptionSpec(
-                savedGroup,
-                "콜라",
-                2000,
-                null
-        );
+        OptionSpec option = new OptionSpec(savedGroup, optionName, price, isDefault);
         OptionSpec savedOption = optionSpecRepo.save(option);
+
+
+        // Then
+        assertNotNull(savedGroup.getId());
         assertNotNull(savedOption.getId());
     }
 }

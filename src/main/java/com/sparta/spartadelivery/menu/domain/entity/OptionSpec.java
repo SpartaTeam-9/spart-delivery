@@ -1,6 +1,7 @@
 package com.sparta.spartadelivery.menu.domain.entity;
 
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.menu.domain.vo.MoneyVO;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -27,21 +28,23 @@ public class OptionSpec extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private Integer price;
+    @Embedded
+    private MoneyVO price;
 
     @Column // Default false
-    private Boolean isDefault;
+    private boolean isDefault;
 
     public OptionSpec(OptionGroupSpec optionGroupSpec, String name, Integer price, Boolean isDefault) {
         this.optionGroupSpec = optionGroupSpec;
         this.name = name;
-        this.price = price;
-        this.isDefault = (isDefault != null) ? isDefault : false; // Boolean NULL 값 방지
+        this.price = new MoneyVO(price);
+        this.isDefault = isDefault;
     }
 
-    // 생성 팩토리
-    public static OptionSpec createOptionSpec(OptionGroupSpec optionGroupSpec, String name, Integer price, Boolean isDefault) {
-        return new OptionSpec(optionGroupSpec, name, price, isDefault);
+    public void update(OptionGroupSpec optionGroupSpec, String name, Integer price, Boolean isDefault) {
+        this.optionGroupSpec = optionGroupSpec;
+        this.name = name;
+        this.price = new MoneyVO(price);
+        this.isDefault = isDefault;
     }
 }
