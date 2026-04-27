@@ -19,9 +19,12 @@ public class Payment extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(nullable = false)
+    private Long userId;
+
+    // 이벤트 기반으로 처리 합니다.
+    @Column(nullable = false)
+    private UUID orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -33,5 +36,15 @@ public class Payment extends BaseEntity {
 
     @Column(nullable = false)
     private Integer amount;
+
+    public static Payment create(Long userId, UUID orderId, Integer amount) {
+        Payment payment = new Payment();
+        payment.userId = userId;
+        payment.orderId = orderId;
+        payment.amount = amount;
+        payment.status = PaymentStatus.PENDING;
+
+        return payment;
+    }
 
 }
