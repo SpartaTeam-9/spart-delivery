@@ -34,7 +34,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           # test container 가 실패 시 CI도 실패
-          docker-compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from test-runner
+          docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from test-runner
         
         # CI 성공 시 CD 를 트리거 해야 합니다.
         # CD 워크 플로우의 workflow-run 에서 감지되므로
