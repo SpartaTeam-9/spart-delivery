@@ -12,7 +12,6 @@ import com.sparta.spartadelivery.menu.presentation.dto.response.MenuListResponse
 import com.sparta.spartadelivery.store.domain.entity.Store;
 import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.store.exception.StoreErrorCode;
-import com.sparta.spartadelivery.user.domain.entity.Role;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,30 +25,27 @@ public class MenuService {
 
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
+    private final MenuPermissionPolicy menuPermissionPolicy;
+    private final MenuManagePermissionPolicy menuManagePermissionPolicy;
 
     /**
      * 메뉴 등록
      */
     @Transactional
     public MenuDetailResponse createMenu(UUID storeId, MenuCreateRequest request, UserPrincipal requester) {
-        // 권한 검증, 데이터 검증, 오류 없이 return 잘 되나 검증
-
+        // 1. 가게 존재 여부 및 폐업 상태 확인 (getStore 내부에서 처리)
         Store store = getStore(storeId);
 
-        // 1. CUSTOMER 이하 차단
-        validateNotCustomer(requester);
+        // 2. 관리 권한 통합 검증 (가게 상태 + 유저 권한 체크)
+        menuManagePermissionPolicy.validateManagePermission(requester, store);
 
-        // 2. OWNER라면 자기 가게인지 검증
-        validateOwnerStore(store, requester);
-
-        // 3. 데이터 검증
+        // 3. 데이터 유효성 검증
         validateMenuData(request);
 
-        // 4. 메뉴 생성
+        // 4. 메뉴 생성 및 저장
         Menu menu = createMenuEntity(storeId, request);
-
-        // 5. 저장
         Menu savedMenu = menuRepository.save(menu);
+
         return MenuDetailResponse.from(savedMenu);
     }
 
@@ -58,13 +54,12 @@ public class MenuService {
      */
     @Transactional
     public List<MenuListResponse> getMenusByRole(UUID storeId, UserPrincipal requester) {
+        Store store = getStore(storeId);
+        MenuViewScope scope = menuPermissionPolicy.getMenuListScope(requester, store);
 
-        Role role = (requester == null) ? Role.CUSTOMER : requester.getRole();
-
-        List<Menu> menus = switch (role) {
-            case MASTER, MANAGER -> menuRepository.findAllByStoreId(storeId);
-            case OWNER -> menuRepository.findAllByStoreIdAndDeletedAtIsNull(storeId);
-            default -> menuRepository.findAllByStoreIdAndDeletedAtIsNullAndIsHiddenFalse(storeId);
+        List<Menu> menus = switch (scope) {
+            case ALL ->  menuRepository.findAllByStoreId(storeId);
+            case ACTIVE_ONLY -> menuRepository.findAllByStoreIdAndDeletedAtIsNullAndIsHiddenFalse(storeId);
         };
 
         return menus.stream()
@@ -81,14 +76,36 @@ public class MenuService {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
 
-        Role role = (requester == null) ? Role.CUSTOMER : requester.getRole();
+        Store store = getStore(menu.getStoreId());
 
-        // 권한별 노출 정책 검증
-        validateMenuVisibility(menu, role);
+        // 권한 정책 적용
+        menuPermissionPolicy.validateMenuDetailPermission(requester, store, menu);
 
         return MenuDetailResponse.from(menu);
     }
 
+    /**
+     * 메뉴 삭제
+     */
+    @Transactional
+    public void deleteMenu(UUID menuId, UserPrincipal requester) {
+        // 1. 메뉴 조회
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
+
+        // 2. 가게 조회 및 상태 확인
+        Store store = getStore(menu.getStoreId());
+
+
+        // 3. 관리 권한 통합 검증 (가게 상태 + 유저 권한 체크)
+        menuManagePermissionPolicy.validateManagePermission(requester, store);
+
+        // 4. 삭제 가능 상태인지 추가 검증 (이미 삭제된 메뉴인지 등)
+        menuManagePermissionPolicy.validateDeleteCondition(menu);
+
+        // 5. soft delete (or email 이용)
+        menu.markDeleted(requester.getUsername());
+    }
 
 
     // --- Private Helper Methods ---
@@ -103,28 +120,7 @@ public class MenuService {
     }
 
     /**
-     * 권한 - CUSTOMER 이하 차단
-     */
-    private void validateNotCustomer(UserPrincipal requester) {
-        if (requester == null || requester.getRole() == Role.CUSTOMER) {
-            throw new AppException(MenuErrorCode.MENU_ACCESS_DENIED);
-        }
-    }
-
-    /**
-     * 권한 - OWNER라면 자기 가게인지 검증
-     */
-    private void validateOwnerStore(Store store, UserPrincipal requester) {
-
-        if (requester.getRole() != Role.OWNER) return; // OWNER만 검증
-
-        if (!store.getOwner().getId().equals(requester.getId())) {
-            throw new AppException(MenuErrorCode.MENU_CREATE_ACCESS_DENIED);
-        }
-    }
-
-    /**
-     * 데이터 검증
+     * 메뉴 데이터 기본 검증
      */
     private void validateMenuData(MenuCreateRequest request) {
 
@@ -138,24 +134,7 @@ public class MenuService {
     }
 
     /**
-     * active 메뉴 권한
-     */
-    private void validateMenuVisibility(Menu menu, Role role) {
-        if (role == Role.MASTER || role == Role.MANAGER) return;
-
-        // 삭제된 메뉴는 MASTER/MANAGER 외에 조회 불가
-        if (menu.isDeleted()) {
-            throw new AppException(MenuErrorCode.MENU_NOT_FOUND);
-        }
-
-        // CUSTOMER는 숨겨진 메뉴 조회 불가
-        if (role == Role.CUSTOMER && menu.isHidden()) {
-            throw new AppException(MenuErrorCode.MENU_NOT_FOUND);
-        }
-    }
-
-    /**
-     * MENU 생성
+     * MENU Entity 생성 로직
      */
     private Menu createMenuEntity(UUID storeId, MenuCreateRequest request) {
         // 가격 유효성 검증은 MoneyVO 생성자에게 위임
@@ -173,5 +152,4 @@ public class MenuService {
                 request.aiPrompt()
         );
     }
-
 }
