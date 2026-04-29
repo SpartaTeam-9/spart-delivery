@@ -11,14 +11,32 @@ public record MenuDetailResponse(
         @Schema(description = "메뉴 ID", example = "550e8400-e29b-41d4-a716-446655440010")
         UUID id,
 
+        @Schema(description = "가게 ID", example = "550e8400-e29b-41d4-a716-446655440011")
+        UUID storeId,
+
+        @Schema(description = "메뉴 카테고리 ID", example = "550e8400-e29b-41d4-a716-446655440012")
+        UUID menuCategoryId,
+
         @Schema(description = "메뉴명", example = "불고기버거")
         String name,
 
         @Schema(description = "메뉴 가격", example = "5500")
         Integer price,
 
+        @Schema(description = "메뉴 설명", example = "불고기버거입니다.")
+        String description,
+
+        @Schema(description = "메뉴 사진", example = "http://image.com")
+        String menuPictureUrl,
+
         @Schema(description = "메뉴 숨김 여부", example = "false")
-        boolean hidden,
+        boolean isHidden,
+
+        @Schema(description = "AI 메뉴 설명", example = "한국식 버거 불고기버거입니다.")
+        String aiDescription,
+
+        @Schema(description = "AI 메뉴 프롬프트", example = "불고기 버거 메뉴 설명을 해줘.")
+        String aiPrompt,
 
         @Schema(description = "메뉴 삭제 여부", example = "false")
         boolean deleted,
@@ -33,9 +51,15 @@ public record MenuDetailResponse(
     public static MenuDetailResponse from(Menu menu) {
         return new MenuDetailResponse(
                 menu.getId(),
+                menu.getStoreId(),
+                menu.getMenuCategoryId(),
                 menu.getName(),
                 menu.getPrice().getPrice(),   // MoneyVO → price 값 꺼내기
+                menu.getDescription(),
+                menu.getMenuPictureUrl(),
                 menu.isHidden(),
+                menu.getAiDescription(),
+                menu.getAiPrompt(),
                 menu.getDeletedAt() != null,
                 menu.getCreatedAt(),
                 menu.getUpdatedAt()

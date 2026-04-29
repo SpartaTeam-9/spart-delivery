@@ -20,8 +20,13 @@ public record MenuListResponse(
         @Schema(description = "메뉴 숨김 여부", example = "false")
         boolean hidden,
 
+        @Schema(description = "메뉴 사진", example = "http://image.com")
+        String menuPictureUrl,
+
         @Schema(description = "메뉴 생성 일시", example = "2026-04-21T12:00:00")
         LocalDateTime createdAt
+
+        // hidden이랑 deleted는? DB에서 처리?
 ) {
 
     public static MenuListResponse from(Menu menu) {
@@ -30,6 +35,7 @@ public record MenuListResponse(
                 menu.getName(),
                 menu.getPrice().getPrice(),   // MoneyVO → price 값 꺼내기
                 menu.isHidden(),
+                menu.getMenuPictureUrl(),
                 menu.getCreatedAt()
         );
     }

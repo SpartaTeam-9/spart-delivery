@@ -72,8 +72,9 @@ public class Menu extends BaseEntity {
         this.aiPrompt = aiPrompt;
     }
 
+
     public void update(
-            UUID storeId,
+            //UUID storeId,
             UUID menuCategoryId,
             String name,
             Integer price,
@@ -83,10 +84,10 @@ public class Menu extends BaseEntity {
             String aiDescription,
             String aiPrompt) {
 
-        this.storeId = storeId;
+        //this.storeId = storeId;
         this.menuCategoryId = menuCategoryId;
         this.name = name;
-        this.price = new  MoneyVO(price);
+        this.price = new MoneyVO(price);
         this.description = description;
         this.menuPictureUrl = menuPictureUrl;
         this.isHidden = isHidden;
