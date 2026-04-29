@@ -389,6 +389,33 @@ class StoreServiceTest {
     }
 
     @Test
+    @DisplayName("공개 가게 상세 정보를 조회한다")
+    void getStore() {
+        UUID storeId = UUID.randomUUID();
+        Store store = store(storeId, 1L, "스파르타 분식", "분식", "강남");
+        when(storeRepository.findByIdAndDeletedAtIsNullAndIsHiddenFalse(storeId))
+                .thenReturn(Optional.of(store));
+
+        var response = storeService.getStore(storeId);
+
+        assertThat(response.name()).isEqualTo("스파르타 분식");
+        assertThat(response.hidden()).isFalse();
+    }
+
+    @Test
+    @DisplayName("공개 가게가 아니면 상세 조회할 수 없다")
+    void getStoreWhenNotFound() {
+        UUID storeId = UUID.randomUUID();
+        when(storeRepository.findByIdAndDeletedAtIsNullAndIsHiddenFalse(storeId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> storeService.getStore(storeId))
+                .isInstanceOf(AppException.class)
+                .extracting("errorCode")
+                .isEqualTo(StoreErrorCode.STORE_NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("관리자용 가게 목록은 hidden이 false면 숨김 가게를 제외한다")
     void getAdminStoresWithoutHidden() {
         Store visibleStore = store(UUID.randomUUID(), 1L, "스파르타 분식", "분식", "강남");

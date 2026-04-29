@@ -102,6 +102,13 @@ public class StoreService {
         );
     }
 
+    public StoreDetailResponse getStore(UUID storeId) {
+        Store store = storeRepository.findByIdAndDeletedAtIsNullAndIsHiddenFalse(storeId)
+                .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
+
+        return StoreDetailResponse.from(store);
+    }
+
     public StorePageResponse getAdminStores(
             UserPrincipal requester,
             int page,
