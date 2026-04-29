@@ -92,6 +92,17 @@ public class StoreService {
         return StoreDetailResponse.from(store);
     }
 
+    @Transactional
+    public StoreDetailResponse hideStore(UUID storeId, UserPrincipal requester) {
+        Store store = storeRepository.findByIdAndDeletedAtIsNull(storeId)
+                .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
+
+        validateHidePermission(requester, store);
+        store.hide();
+
+        return StoreDetailResponse.from(store);
+    }
+
     public StorePageResponse getStores(int page, int size, String sort) {
         String normalizedSort = normalizeSort(sort);
         Pageable pageable = createPageable(page, size, normalizedSort);
@@ -149,6 +160,16 @@ public class StoreService {
             return;
         }
         throw new AppException(StoreErrorCode.STORE_UPDATE_ACCESS_DENIED);
+    }
+
+    private void validateHidePermission(UserPrincipal requester, Store store) {
+        if (requester.getRole() == Role.MANAGER || requester.getRole() == Role.MASTER) {
+            return;
+        }
+        if (requester.getRole() == Role.OWNER && store.getOwner().getId().equals(requester.getId())) {
+            return;
+        }
+        throw new AppException(StoreErrorCode.STORE_HIDE_ACCESS_DENIED);
     }
 
     private void validateAdminListPermission(UserPrincipal requester) {
