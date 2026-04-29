@@ -1,15 +1,15 @@
 # 워크 플로우 이름 - github Actions UI에서 확인 가능
 # 참고로 지금은 Coverage 를 확인하지 않을 것 입니다. (dev에서 다 확인했기에)
-name: Main CI Build And integration Test
+name: CI - Build and Integration Test
 
 # 트리거 설정 : develop -> main 에 Pr 또는 업데이트 시 실행
 on:
   pull_request:
     branches:
-      - develop
+      - prod
   push:
     branches:
-      - develop
+      - prod
 
 # Job 을 정의합니다.
 jobs:
