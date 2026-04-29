@@ -29,5 +29,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=delivery_user
       - SPRING_DATASOURCE_PASSWORD=delivery_password
       - JWT_SECRET=test-secret-key-at-least-32-characters-long
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
+      - SPRING_JPA_SHOW_SQL=true
     # 테스트 명령어를 직접 실행 (빌드 생략하고 테스트만 수행)
     command: ["./gradlew", "test"]
