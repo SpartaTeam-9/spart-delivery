@@ -1,10 +1,5 @@
 package com.sparta.spartadelivery.menu.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.menu.domain.entity.Menu;
@@ -16,10 +11,6 @@ import com.sparta.spartadelivery.store.domain.entity.Store;
 import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.store.exception.StoreErrorCode;
 import com.sparta.spartadelivery.user.domain.entity.Role;
-import java.util.Optional;
-import java.util.UUID;
-
-import com.sparta.spartadelivery.user.domain.entity.UserEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +18,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MenuServiceTest {
@@ -36,6 +35,13 @@ class MenuServiceTest {
 
     @Mock
     private StoreRepository storeRepository;
+
+    // 추가해야 할 부분
+    @Mock
+    private MenuPermissionPolicy menuPermissionPolicy;
+
+    @Mock
+    private MenuManagePermissionPolicy menuManagePermissionPolicy;
 
     @InjectMocks
     private MenuService menuService;
@@ -69,13 +75,28 @@ class MenuServiceTest {
     @Test
     @DisplayName("메뉴 상세 조회 실패 - 고객이 삭제된 메뉴 조회 시")
     void getMenuByRole_Fail_DeletedMenu() {
+        // given
         UUID menuId = UUID.randomUUID();
         UserPrincipal requester = principal(Role.CUSTOMER);
 
         Menu menu = mock(Menu.class);
-        when(menu.isDeleted()).thenReturn(true);
-        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+        Store store = mock(Store.class);
 
+        // (1) 메뉴 조회 Mocking
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+        when(menu.getStoreId()).thenReturn(UUID.randomUUID());
+
+        // (2) 가게 조회 Mocking
+        when(storeRepository.findById(any())).thenReturn(Optional.of(mock(Store.class)));
+
+        lenient().when(store.isDeleted()).thenReturn(false);
+
+        // (3) Policy가 예외를 던지도록 설정
+        doThrow(new AppException(MenuErrorCode.MENU_NOT_FOUND))
+                .when(menuPermissionPolicy)
+                .validateMenuDetailPermission(any(), any(), any());
+
+        // when & then
         assertThatThrownBy(() -> menuService.getMenuByRole(menuId, requester))
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
@@ -90,18 +111,14 @@ class MenuServiceTest {
     void createMenu_Success() {
         UUID storeId = UUID.randomUUID();
         Long ownerId = 1L;
-
         UserPrincipal requester = principal(ownerId, Role.OWNER);
         MenuCreateRequest request = createRequest();
 
-        UserEntity owner = mock(UserEntity.class);
-        when(owner.getId()).thenReturn(ownerId);
-
         Store store = mock(Store.class);
-        when(store.isDeleted()).thenReturn(false);
-        when(store.getOwner()).thenReturn(owner);
-
         when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(store.isDeleted()).thenReturn(false);
+
+        doNothing().when(menuManagePermissionPolicy).validateManagePermission(any(), any());
 
         when(menuRepository.save(any(Menu.class)))
                 .thenAnswer(invocation -> {
@@ -110,10 +127,13 @@ class MenuServiceTest {
             return menu;
         });
 
+        // when
         MenuDetailResponse response = menuService.createMenu(storeId, request, requester);
 
+        // then
         assertThat(response).isNotNull();
         verify(menuRepository).save(any(Menu.class));
+        verify(menuManagePermissionPolicy).validateManagePermission(eq(requester), eq(store));
     }
 
     // -----------------------------
