@@ -1,0 +1,48 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: sparta-delivery
+  profiles:
+    default: local
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:delivery}
+    username: ${DB_USERNAME:delivery_user}
+    password: ${DB_PASSWORD:delivery_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.springframework.web: debug
+    org.springframework.security: debug
+
+jwt:
+  secret: ${JWT_SECRET:please-change-this-secret-key-for-local-dev-at-least-32bytes}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}
+
+app:
+  seed:
+    store-categories:
+      enabled: true
+      values:
+        - 한식
+        - 중식
+        - 일식
+        - 양식
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never # DB 는 숨기고 UP/DOWN 만 보여집니다.
