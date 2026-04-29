@@ -55,6 +55,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }} # Elastic IP
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY,RDS_HOSTURL,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET
           script: |
             #ECR login
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
