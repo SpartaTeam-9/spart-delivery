@@ -18,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reviews")
 @RestController
-public class ReviewController {
+public class ReviewController implements ReviewApiSpecification {
     private final ReviewService reviewService;
 
     @PreAuthorize("hasAnyRole('CUSTOMER')")
