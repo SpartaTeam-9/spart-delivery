@@ -1,11 +1,10 @@
 name: CD - Deploy to AWS EC2
 
 on:
-  # CI 성공 시 실행되도록 설정하거나, main 브랜치 푸시 시 실행
-  workflow_run:
-    workflows: ["CI - Build and Integration Test"]
-    types: [completed]
-    branches: [prod]
+  push:
+    branches:
+      - prod # main 에 할 수 없으므로 지금은 prod로 합니다.
+      # main 이라면 workflows -> types -> branches 로 정의해야 합니다.
 
 
 jobs:
