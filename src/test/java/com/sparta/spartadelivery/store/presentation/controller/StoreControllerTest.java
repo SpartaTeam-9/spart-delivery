@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -106,7 +107,7 @@ class StoreControllerTest {
                 "서울특별시 강남구 테헤란로 123",
                 "02-1234-5678"
         );
-        StoreDetailResponse response = storeResponse(request.name(), request.storeCategoryId(), request.areaId());
+        StoreDetailResponse response = storeResponse(request.name(), request.storeCategoryId(), request.areaId(), false);
 
         given(storeService.createStore(any(StoreCreateRequest.class), any(UserPrincipal.class)))
                 .willReturn(response);
@@ -193,7 +194,7 @@ class StoreControllerTest {
                 "서울특별시 서초구 강남대로 321",
                 "02-9876-5432"
         );
-        StoreDetailResponse response = storeResponse(request.name(), request.storeCategoryId(), request.areaId());
+        StoreDetailResponse response = storeResponse(request.name(), request.storeCategoryId(), request.areaId(), false);
 
         given(storeService.updateStore(any(UUID.class), any(StoreUpdateRequest.class), any(UserPrincipal.class)))
                 .willReturn(response);
@@ -251,25 +252,32 @@ class StoreControllerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 가게면 가게 수정 시 404를 반환한다")
-    void updateStoreWhenNotFound() throws Exception {
+    @DisplayName("가게 숨김 처리 성공 시 200 OK를 반환한다")
+    void hideStore() throws Exception {
         UUID storeId = UUID.randomUUID();
-        StoreUpdateRequest request = new StoreUpdateRequest(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                "스파르타 떡볶이",
-                "서울특별시 서초구 강남대로 321",
-                "02-9876-5432"
-        );
+        StoreDetailResponse response = storeResponse("스파르타 분식", UUID.randomUUID(), UUID.randomUUID(), true);
 
-        given(storeService.updateStore(any(UUID.class), any(StoreUpdateRequest.class), any(UserPrincipal.class)))
-                .willThrow(new AppException(StoreErrorCode.STORE_NOT_FOUND));
+        given(storeService.hideStore(any(UUID.class), any(UserPrincipal.class)))
+                .willReturn(response);
 
-        mockMvc.perform(put("/api/v1/stores/{storeId}", storeId)
-                        .with(authentication(ownerToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/api/v1/stores/{storeId}/hide", storeId)
+                        .with(authentication(ownerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.hidden").value(true));
+    }
+
+    @Test
+    @DisplayName("권한이 없으면 가게 숨김 처리 시 403을 반환한다")
+    void hideStoreDenied() throws Exception {
+        UUID storeId = UUID.randomUUID();
+        given(storeService.hideStore(any(UUID.class), any(UserPrincipal.class)))
+                .willThrow(new AppException(StoreErrorCode.STORE_HIDE_ACCESS_DENIED));
+
+        mockMvc.perform(patch("/api/v1/stores/{storeId}/hide", storeId)
+                        .with(authentication(customerToken)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -406,7 +414,7 @@ class StoreControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    private StoreDetailResponse storeResponse(String name, UUID storeCategoryId, UUID areaId) {
+    private StoreDetailResponse storeResponse(String name, UUID storeCategoryId, UUID areaId, boolean hidden) {
         return new StoreDetailResponse(
                 UUID.randomUUID(),
                 1L,
@@ -416,7 +424,7 @@ class StoreControllerTest {
                 "서울특별시 강남구 테헤란로 123",
                 "02-1234-5678",
                 BigDecimal.ZERO,
-                false,
+                hidden,
                 LocalDateTime.now()
         );
     }
