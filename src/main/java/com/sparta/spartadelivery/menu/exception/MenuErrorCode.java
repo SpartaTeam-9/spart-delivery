@@ -27,6 +27,9 @@ public enum MenuErrorCode implements BaseErrorCode {
     MENU_DELETE_STORE_DELETED(HttpStatus.GONE, "삭제된 가게의 메뉴는 삭제할 수 없습니다."),
     MENU_ALREADY_DELETED(HttpStatus.CONFLICT, "이미 삭제된 메뉴입니다."),
 
+    MENU_ALREADY_HIDDEN(HttpStatus.CONFLICT, "이미 숨겨진 메뉴입니다."),
+    MENU_ALREADY_SHOW(HttpStatus.CONFLICT, "이미 판매중인 메뉴입니다."),
+
     // 요청 데이터!!!
     MENU_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 메뉴 데이터입니다.");
 
