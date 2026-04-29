@@ -6,10 +6,10 @@ name: Main CI Build And integration Test
 on:
   pull_request:
     branches:
-      - main
+      - develop
   push:
     branches:
-      - main
+      - develop
 
 # Job 을 정의합니다.
 jobs:
