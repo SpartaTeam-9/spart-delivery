@@ -2,7 +2,9 @@ package com.sparta.spartadelivery.store.presentation.dto.response;
 
 import com.sparta.spartadelivery.store.domain.entity.Store;
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -47,9 +49,14 @@ public record StoreDetailResponse(
                 store.getName(),
                 store.getAddress(),
                 store.getPhone(),
-                store.getAverageRating(),
+                getAverageRating(store.getRatingSum(), store.getRatingCount()),
                 store.isHidden(),
                 store.getCreatedAt()
         );
+    }
+
+    private static BigDecimal getAverageRating(int ratingSum, int ratingCount) {
+        return BigDecimal.valueOf((double) ratingSum / ratingCount)
+                .setScale(1, RoundingMode.HALF_UP);
     }
 }

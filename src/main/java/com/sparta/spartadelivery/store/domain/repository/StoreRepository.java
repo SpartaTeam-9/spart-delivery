@@ -8,7 +8,9 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
@@ -25,4 +27,12 @@ public interface StoreRepository extends JpaRepository<Store, UUID> {
     Optional<Store> findByIdAndDeletedAtIsNullAndIsHiddenFalse(UUID id);
 
     Optional<Store> findByOwner(UserEntity user);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Store s SET s.ratingSum = s.ratingSum + :delta, " +
+            "s.ratingCount = s.ratingCount + :countDelta " +
+            "WHERE s.id = :id")
+    int updateStoreRating(@Param("id") UUID id,
+                          @Param("delta") int delta,
+                          @Param("countDelta") int countDelta);
 }
