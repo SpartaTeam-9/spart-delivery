@@ -1,23 +1,33 @@
-name: sparta-delivery
+name: sparta-delivery-test
+
 services:
+  # 1. 테스트용 데이터베이스
   postgres:
     image: postgres:16.6
-    container_name: sparta-delivery-postgres
-    restart: unless-stopped
+    container_name: test-db
     environment:
-      POSTGRES_DB: ${DB_NAME:-delivery}
-      POSTGRES_USER: ${DB_USERNAME:-delivery_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-delivery_password}
-    ports:
-      - '${DB_PORT:-5432}:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: spartadb
+      POSTGRES_USER: delivery_user
+      POSTGRES_PASSWORD: delivery_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${DB_USERNAME::-delivery-user} -d $${DB_NAME:-delivery}"]
-      interval: 5s # test 속도
+      # DB가 쿼리를 받을 준비가 되었는지 검사
+      test: ["CMD-SHELL", "pg_isready -U delivery_user -d spartadb"]
+      interval: 5s
       timeout: 5s
       retries: 5
 
-# 실제 운영 테스트에서는 볼륨이 필요 없습니다.
-volumes:
-  postgres_data:
+
+  test-runner:
+    build: . # 현재 폴더의 Dockerfile을 사용하여 빌드
+    depends_on:
+      postgres:
+        condition: service_healthy # DB가 준비될 때까지 기다림
+    environment:
+      # Spring Boot가 테스트용 DB를 바라보게 설정
+      - SPRING_PROFILES_ACTIVE=test
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/spartadb
+      - SPRING_DATASOURCE_USERNAME=delivery_user
+      - SPRING_DATASOURCE_PASSWORD=delivery_password
+      - JWT_SECRET=test-secret-key-at-least-32-characters-long
+    # 테스트 명령어를 직접 실행 (빌드 생략하고 테스트만 수행)
+    command: ["./gradlew", "test"]
