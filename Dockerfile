@@ -1,6 +1,11 @@
 FROM gradle:8.14.3-jdk17 AS build
 
 WORKDIR /app
+
+# 라이브러리 캐싱 필요 (시간)
+COPY build.gradle settings.gradle ./
+RUN gradle dependencies --no-daemon
+
 COPY . .
 RUN gradle clean build -x test --no-daemon
 
