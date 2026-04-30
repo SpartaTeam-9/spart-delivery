@@ -12,6 +12,22 @@ import org.springframework.stereotype.Component;
 public class MenuPermissionPolicy {
 
     /**
+     * 메뉴 수정 권한 검증
+     */
+    public void validateMenuModifyPermission(UserPrincipal requester, Store store) {
+        if (requester == null) throw new AppException(MenuErrorCode.MENU_ACCESS_DENIED);
+
+        // 1. MASTER, MANAGER는 모든 메뉴 수정 가능
+        if (isMasterOrManager(requester)) return;
+
+        // 2. OWNER는 본인 가게 메뉴만 수정 가능
+        if (isOwnerOfStore(requester, store)) return;
+
+        // 3. 그 외 모든 경우(CUSTOMER 등) 권한 거부
+        throw new AppException(MenuErrorCode.MENU_ACCESS_DENIED);
+    }
+
+    /**
      * 메뉴 상세 조회 권한 검증
      */
     public void validateMenuDetailPermission(UserPrincipal requester, Store store, Menu menu) {
@@ -48,9 +64,10 @@ public class MenuPermissionPolicy {
         return role == Role.MASTER || role == Role.MANAGER;
     }
 
+
     private boolean isOwnerOfStore(UserPrincipal requester, Store store) {
-        if (requester == null || requester.getRole() != Role.OWNER) return false;
-        // store.getOwner().getId()와 requester.getId() 비교
+        if (requester == null || store == null || requester.getRole() != Role.OWNER) return false;
+        // N+1 문제 추후 리팩토링
         return store.getOwner().getId().equals(requester.getId());
     }
 }
