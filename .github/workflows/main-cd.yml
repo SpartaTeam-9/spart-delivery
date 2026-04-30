@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-    # aws 자격 증명 설정
+      # aws 자격 증명 설정
       - name: Configuration AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -25,12 +25,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
           aws-region: ap-northeast-2
 
-    # Amazon ECR login
+      # Amazon ECR login
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-    # docker image build & push (++ cache)
+      # docker image build & push (++ cache)
       - name: Build and push to ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -55,43 +55,43 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            #ECR login
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-      
-            # 기존 컨테이너 중지
-            docker tag spring-app:latest spring-app:backup || true
-            docker stop spring-app || true
-            docker rm spring-app || true
-      
-            # 새 이미지 실행
-            docker pull ${{ steps.login-ecr.outputs.registry }}/spring-boot-app:latest
-            docker run -d --name spring-app \
-              -p 80:8080 \
-              -e SPRING_PROFILES_ACTIVE=prod \
-              -e SPRING_DATASOURCE_URL=${{ secrets.RDS_HOSTURL }} \
-              -e SPRING_DATASOURCE_USERNAME=${{secrets.RDS_USERNAME }} \
-              -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              ${{ steps.login-ecr.outpus.registry }}/spring-boot-app:latest
-
-      # Health Check
-            echo "Starting health check..."
-            for i in {1..10}; do
+                    #ECR login
+                    aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+                    
+                    # 기존 컨테이너 중지
+                    docker tag spring-app:latest spring-app:backup || true
+                    docker stop spring-app || true
+                    docker rm spring-app || true
+                    
+                    # 새 이미지 실행
+                    docker pull ${{ steps.login-ecr.outputs.registry }}/spring-boot-app:latest
+                    docker run -d --name spring-app \
+                    -p 80:8080 \
+                    -e SPRING_PROFILES_ACTIVE=prod \
+                    -e SPRING_DATASOURCE_URL=${{ secrets.RDS_HOSTURL }} \
+                    -e SPRING_DATASOURCE_USERNAME=${{secrets.RDS_USERNAME }} \
+                    -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+                    -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+                    ${{ steps.login-ecr.outpus.registry }}/spring-boot-app:latest
+            
+            # Health Check
+                    echo "Starting health check..."
+                    for i in {1..10}; do
             # spring actuator health endpoint
-              if curl -f http://localhost/actuator/health; then
-                echo "Health Check Passed"
-                exit 0
-              fi
-              echo "Waiting for service ... ($i/10)"
-              sleep 10
-            done
-      
-      # Health Check 실패 -> 롤백
-            echo "Health Check Failed - Rolling back..."
-            docker stop spring-app || true
-            docker rm spring-app || true
-            docker run -d --name spring-app -p 80:8080 spring-app:backup
-            exit 1
+                    if curl -f http://localhost/actuator/health; then
+                    echo "Health Check Passed"
+                    exit 0
+                    fi
+                    echo "Waiting for service ... ($i/10)"
+                    sleep 10
+                    done
+            
+            # Health Check 실패 -> 롤백
+                    echo "Health Check Failed - Rolling back..."
+                    docker stop spring-app || true
+                    docker rm spring-app || true
+                    docker run -d --name spring-app -p 80:8080 spring-app:backup
+                    exit 1
 
       # 결과 알람
       - name: Notify Discord success/fail
@@ -101,5 +101,3 @@ jobs:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: ${{ job.status }}
           content: "배포 결과: ${{ job.status == 'success' && '🎊배포 성공' || '😨 배포 실패 및 롤백 ' }}\n접속 URL: http:${{ secrets.EC2_HOST }}"
-
-
