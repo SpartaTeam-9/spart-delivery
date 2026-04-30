@@ -62,4 +62,10 @@ public class MenuManagePermissionPolicy {
             throw new AppException(MenuErrorCode.MENU_ALREADY_HIDDEN);
         }
     }
+
+    public void validateUpdateCondition(UserPrincipal editor, Menu menu) {
+        if (menu.isDeleted()) {
+            throw new AppException(MenuErrorCode.MENU_UPDATE_ACCESS_DENIED);
+        }
+    }
 }

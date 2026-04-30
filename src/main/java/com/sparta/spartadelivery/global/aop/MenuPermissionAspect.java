@@ -7,6 +7,9 @@ import com.sparta.spartadelivery.menu.application.service.MenuPermissionPolicy;
 import com.sparta.spartadelivery.menu.domain.entity.Menu;
 import com.sparta.spartadelivery.menu.domain.repository.MenuRepository;
 import com.sparta.spartadelivery.menu.exception.MenuErrorCode;
+import com.sparta.spartadelivery.store.domain.entity.Store;
+import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
+import com.sparta.spartadelivery.store.exception.StoreErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -21,6 +24,7 @@ public class MenuPermissionAspect {
 
     private final MenuPermissionPolicy menuPermissionPolicy;
     private final MenuRepository menuRepository;
+    private final StoreRepository storeRepository;
 
     // @CheckMenuPermission이 붙은 메서드 실행 전에 권한 검증 수행
     // 파라미터 중 menuId와 userPrincipal을 자동으로 바인딩함
@@ -34,7 +38,10 @@ public class MenuPermissionAspect {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
 
+        Store store = storeRepository.findById(menu.getStoreId())
+                .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
+
         // 2. 통합 Policy를 호출하여 권한 검증
-        menuPermissionPolicy.validateMenuModifyPermission(userPrincipal, menu);
+        menuPermissionPolicy.validateMenuModifyPermission(userPrincipal, store);
     }
 }

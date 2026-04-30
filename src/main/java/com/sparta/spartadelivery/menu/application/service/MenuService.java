@@ -7,8 +7,10 @@ import com.sparta.spartadelivery.menu.domain.repository.MenuRepository;
 import com.sparta.spartadelivery.menu.domain.vo.MoneyVO;
 import com.sparta.spartadelivery.menu.exception.MenuErrorCode;
 import com.sparta.spartadelivery.menu.presentation.dto.request.MenuCreateRequest;
+import com.sparta.spartadelivery.menu.presentation.dto.request.MenuUpdateRequest;
 import com.sparta.spartadelivery.menu.presentation.dto.response.MenuDetailResponse;
 import com.sparta.spartadelivery.menu.presentation.dto.response.MenuListResponse;
+import com.sparta.spartadelivery.menu.presentation.dto.response.MenuUpdateResponse;
 import com.sparta.spartadelivery.store.domain.entity.Store;
 import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.store.exception.StoreErrorCode;
@@ -96,7 +98,6 @@ public class MenuService {
         // 2. 가게 조회 및 상태 확인
         Store store = getStore(menu.getStoreId());
 
-
         // 3. 관리 권한 통합 검증 (가게 상태 + 유저 권한 체크)
         menuManagePermissionPolicy.validateManagePermission(requester, store);
 
@@ -130,6 +131,30 @@ public class MenuService {
         menu.hide();
 
         return MenuDetailResponse.from(menu);
+    }
+
+    @Transactional
+    public MenuUpdateResponse update(UUID menuId, UserPrincipal editor, MenuUpdateRequest request) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
+        Store store = storeRepository.findById(menu.getStoreId())
+                .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
+
+        menuManagePermissionPolicy.validateManagePermission(editor, store);
+        menuManagePermissionPolicy.validateUpdateCondition(editor, menu);
+
+        menu.update(
+                request.menuCategoryId(),
+                request.name(),
+                request.price(),
+                request.description(),
+                request.menuPictureUrl(),
+                request.isHidden(),
+                request.aiDescription(),
+                request.aiPrompt()
+        );
+
+        return MenuUpdateResponse.from(menu);
     }
 
 
