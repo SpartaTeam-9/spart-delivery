@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.UUID;
 
-@Tag(name = "Review API", description = "리뷰 관련 API")
+@Tag(name = "Review", description = "리뷰 관련 API")
 public interface ReviewApiSpecification {
 
     @Operation(summary = "리뷰 작성", description = "배달 완료된 주문에 대해 리뷰를 작성합니다. (CUSTOMER 권한 필요)")
