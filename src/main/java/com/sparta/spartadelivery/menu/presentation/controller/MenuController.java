@@ -119,6 +119,7 @@ public class MenuController {
                     """
     )
     @DeleteMapping("/menus/{menuId}")
+    @CheckMenuPermission(action = MenuAction.DELETE)
     public ResponseEntity<ApiResponse<Void>> deleteMenu(
             @PathVariable UUID menuId,
             @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -139,7 +140,7 @@ public class MenuController {
                     """
     )
     @PatchMapping("/menus/{menuId}/hide")
-    @CheckMenuPermission(action = MenuAction.HIDE) // AOP 가동
+    @CheckMenuPermission(action = MenuAction.HIDE)
     public ResponseEntity<ApiResponse<MenuDetailResponse>> hideMenu(
             @PathVariable UUID menuId,
             @AuthenticationPrincipal UserPrincipal userPrincipal
@@ -154,18 +155,21 @@ public class MenuController {
             description = """
                     메뉴의 기본 정보, 카테고리, 상태(숨김), AI 관련 정보를 수정합니다.
                     
-                    **[권한 및 제약 사항]**
-                    * **Owner**: 본인 가게의 메뉴만 수정 가능 (삭제된 메뉴는 수정 불가)
-                    * **Manager**: 부적절한 정보 수정 및 숨김(Hidden) 처리 가능. 단, **aiPrompt 수정은 불가**
-                    * **Master**: 모든 필드 수정 및 상태 변경 가능
-                    * **Admin Lock**: 관리자가 잠금(`hiddenLockedByAdmin`)한 메뉴는 Owner가 숨김 해제 불가"""
+                    - OWNER: 본인 가게의 메뉴만 수정 가능 (삭제된 메뉴는 수정 불가)
+                    - MANAGER: 부적절한 정보 수정 가능
+                    - MASTER: 모든 메뉴 수정 가능
+                    """
     )
     @PutMapping("/menus/{menuId}")
+    //@CheckMenuPermission(action = MenuAction.UPDATE)
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'MASTER')")
-    public MenuUpdateResponse update(@PathVariable UUID menuId,
+    public ResponseEntity<ApiResponse<MenuUpdateResponse>> update(@PathVariable UUID menuId,
                                      @RequestBody MenuUpdateRequest request,
-                                     @AuthenticationPrincipal UserPrincipal updateBy) {
-        return menuService.update(menuId, updateBy, request);
+                                     @AuthenticationPrincipal UserPrincipal updateBy
+    ) {
+        MenuUpdateResponse response = menuService.update(menuId, updateBy, request);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.success(HttpStatus.OK.value(), "메뉴가 성공적으로 수정됐습니다.", response));
     }
 
 

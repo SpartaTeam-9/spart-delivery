@@ -28,7 +28,6 @@ public class MenuService {
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
     private final MenuPermissionPolicy menuPermissionPolicy;
-    private final MenuManagePermissionPolicy menuManagePermissionPolicy;
 
     /**
      * 메뉴 등록
@@ -39,7 +38,7 @@ public class MenuService {
         Store store = getStore(storeId);
 
         // 2. 관리 권한 통합 검증 (가게 상태 + 유저 권한 체크)
-        menuManagePermissionPolicy.validateManagePermission(requester, store);
+        menuPermissionPolicy.validateManagePermission(requester, store);
 
         // 3. 데이터 유효성 검증
         validateMenuData(request);
@@ -99,10 +98,10 @@ public class MenuService {
         Store store = getStore(menu.getStoreId());
 
         // 3. 관리 권한 통합 검증 (가게 상태 + 유저 권한 체크)
-        menuManagePermissionPolicy.validateManagePermission(requester, store);
+        menuPermissionPolicy.validateManagePermission(requester, store);
 
         // 4. 삭제 가능 상태인지 추가 검증 (이미 삭제된 메뉴인지 등)
-        menuManagePermissionPolicy.validateDeleteCondition(menu);
+        menuPermissionPolicy.validateDeleteCondition(requester, menu);
 
         // 5. soft delete (or email 이용)
         menu.markDeleted(requester.getUsername());
@@ -113,8 +112,6 @@ public class MenuService {
      */
     @Transactional
     public MenuDetailResponse hideMenu(UUID menuId, UserPrincipal requester) {
-        // Aspect에서 존재 여부를 확인했지만, 영속성 컨텍스트 활용을 위해 한 번 더 조회하거나
-        // Aspect에서 조회한 객체를 넘겨받는 설계를 사용할 수 있습니다.
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
 
@@ -122,10 +119,10 @@ public class MenuService {
         Store store = getStore(menu.getStoreId());
 
         // 3. 권한 검증 (사장님 본인인지 + 가게 상태 등)
-        menuManagePermissionPolicy.validateManagePermission(requester, store);
+        menuPermissionPolicy.validateManagePermission(requester, store);
 
         // 4. 숨김 가능 상태인지 검증
-        menuManagePermissionPolicy.validateHideCondition(menu);
+        menuPermissionPolicy.validateHideCondition(requester, menu);
 
         // 5. 상태 변경
         menu.hide();
@@ -133,30 +130,49 @@ public class MenuService {
         return MenuDetailResponse.from(menu);
     }
 
+    /**
+     * 메뉴 수정
+     */
     @Transactional
-    public MenuUpdateResponse update(UUID menuId, UserPrincipal editor, MenuUpdateRequest request) {
+    public MenuUpdateResponse updateMenu(UUID menuId, UserPrincipal requester, MenuUpdateRequest req) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new AppException(MenuErrorCode.MENU_NOT_FOUND));
-        Store store = storeRepository.findById(menu.getStoreId())
-                .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
+        Store store = getStore(menu.getStoreId());
 
-        menuManagePermissionPolicy.validateManagePermission(editor, store);
-        menuManagePermissionPolicy.validateUpdateCondition(editor, menu);
+        menuPermissionPolicy.validateManagePermission(requester, store);
+        menuPermissionPolicy.validateUpdateCondition(requester, menu);
 
+        /*
+        Role role = requester.getRole();
+        switch (role) {
+
+            // OWNER: 카테고리, 이름, 가격, 설명, 사진 수정 (숨김, 삭제는 별도)
+            case OWNER -> applyOwnerUpdates(menu, req);
+
+            // MANAGER: 카테고리, 이름, 설명, 사진 수정 (숨김은 별도)
+            case MANAGER -> applyManagerUpdates(menu, req);
+
+            // MASTER: menuId, storeId, ai도 수정 가능
+            case MASTER -> applyMasterUpdates(menu, req);
+
+            default -> throw new AppException(MenuErrorCode.MENU_ACCESS_DENIED);
+        }
+        */
+
+        // 메뉴 수정
         menu.update(
-                request.menuCategoryId(),
-                request.name(),
-                request.price(),
-                request.description(),
-                request.menuPictureUrl(),
-                request.isHidden(),
-                request.aiDescription(),
-                request.aiPrompt()
+                req.menuCategoryId(),
+                req.name(),
+                req.price(),
+                req.description(),
+                req.menuPictureUrl(),
+                req.isHidden(),
+                req.aiDescription(),
+                req.aiPrompt()
         );
 
         return MenuUpdateResponse.from(menu);
     }
-
 
     // --- Private Helper Methods ---
 
@@ -165,7 +181,7 @@ public class MenuService {
      */
     private Store getStore(UUID storeId) {
         return storeRepository.findById(storeId)
-                .filter(s -> !s.isDeleted()) // 폐업한 가게 체크 추가
+                .filter(s -> !s.isDeleted())
                 .orElseThrow(() -> new AppException(StoreErrorCode.STORE_NOT_FOUND));
     }
 
