@@ -98,7 +98,38 @@
 | `spring-security-test` | Security 관련 테스트 지원 |
 | `spring-boot-configuration-processor` | `@ConfigurationProperties` 메타데이터 생성 |
 
+## 🚀 서비스 구성 및 실행 방법
+
+### 사전 요구사항
+
+- Docker & Docker Compose 설치
+- Java 17을 기준으로 합니다.
+
 ### 실행 방법
+
+```bash
+# 1. 프로젝트를 다운받습니다.
+git clone https://github.com/SpartaTeam-9/spart-delivery.git
+cd spart-delivery
+
+# 2. env 파일에서 설정을 자신의 설정에 맞게 수정합니다.
+- DB_URL
+- DB_USERNAME
+- DB_PASSWORD
+- JWT_SECRET_KEY
+
+# 3. Docker compose로 인프라를 실행합니다.
+docker-compose up -d
+
+# 4. 앱 빌드 및 실행
+./gradlew clean build
+./gradlew bootRun
+
+# 5. 서비스 종료
+docker-compose down
+```
+
+### 빠른 실행 방법
 
 1. Docker Desktop을 실행합니다.
 2. IntelliJ IDEA에서 프로젝트를 엽니다.
@@ -427,43 +458,20 @@ Authorization: Bearer {accessToken}
 
 이 API가 성공하면 `JwtAuthenticationFilter`가 토큰을 검증하고, `SecurityContext`에 `UserPrincipal`을 정상 저장했다는 뜻입니다.
 
-## 현재까지 구현된 기능
+## 👥 팀원 소개
 
-### 프로젝트 기반
+<div align="center">
 
-- [x] Spring Boot 3.5.13 / Java 17 / Gradle 기반 프로젝트 설정
-- [x] PostgreSQL Docker Compose 설정
-- [x] IntelliJ 실행 시 Docker Compose 자동 실행 설정
-- [x] `application.yaml` 로컬 환경 기본값 설정
-- [x] JPA Auditing 설정
-- [x] 테스트용 H2 의존성 추가
+| 김유비 | 한혜수 | 이슬기 | 조아영 |
+|:---:|:---:|:---:|:---:|
+| [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/kimyubi) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/hyesuhan) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/skdev0619) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/look516) |
+| 팀장<br/>사용자 · 인증<br/>가게 | 주문 · 결제<br/> 주소 <br/> CI/CD · 배포 | 지역<br/>리뷰 | 메뉴<br/>옵션 |
 
-### 공통 처리
+</div>
 
-- [x] `BaseEntity` 생성/수정/삭제 공통 필드
-- [x] `ApiResponse` 공통 응답 형식
-- [x] `ValidationErrorResponse` 검증 실패 응답 형식
-- [x] `ErrorCode` 공통 에러 코드
-- [x] `AppException` 서비스 예외
-- [x] `GlobalExceptionHandler` 전역 예외 처리
-- [x] 전역 예외 처리 테스트
 
-### User/Auth/Security
 
-- [x] `UserEntity`
-- [x] `Role`
-- [x] `UserRepository`
-- [x] 회원가입 API
-- [x] 로그인 API
-- [x] 현재 사용자 조회 예시 API `/api/v1/auth/me`
-- [x] 비밀번호 BCrypt 암호화
-- [x] JWT access token 발급
-- [x] JWT 인증 필터
-- [x] JWT payload 기반 DB 권한 재검증
-- [x] Security 인증 실패/인가 실패 JSON 응답
-- [x] Auth 서비스 테스트
-- [x] Auth 요청 DTO validation 테스트
-- [x] Security 필터/핸들러 테스트
+
 
 ## 테스트 실행
 
