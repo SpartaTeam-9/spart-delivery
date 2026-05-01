@@ -464,7 +464,6 @@ Authorization: Bearer {accessToken}
 
 | 김유비 | 한혜수 | 이슬기 | 조아영 |
 |:---:|:---:|:---:|:---:|
-| <img src="./images/kimyubi.png" width="100" height="100"/> | <img src="./images/hyesuhan.png" width="100" height="100"/> | <img src="./images/skdev0619.png" width="100" height="100"/> | <img src="./images/look516.png" width="100" height="100"/>
 | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/kimyubi) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/hyesuhan) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/skdev0619) | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/look516) |
 | 팀장<br/>사용자 · 인증<br/>가게 | 주문 · 결제<br/> 주소 <br/> CI/CD · 배포 | 지역<br/>리뷰 | 메뉴<br/>옵션 |
 
