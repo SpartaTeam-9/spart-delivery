@@ -4,11 +4,14 @@ import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.global.infrastructure.config.security.UserPrincipal;
 import com.sparta.spartadelivery.menu.domain.entity.Menu;
 import com.sparta.spartadelivery.store.domain.entity.Store;
+import com.sparta.spartadelivery.store.domain.repository.StoreRepository;
 import com.sparta.spartadelivery.user.domain.entity.Role;
 import com.sparta.spartadelivery.user.domain.entity.UserEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -19,7 +22,15 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(MockitoExtension.class)
 class MenuPermissionPolicyTest {
 
-    private final MenuPermissionPolicy policy = new MenuPermissionPolicy();
+    @Mock
+    private StoreRepository storeRepository;
+
+    private MenuPermissionPolicy policy;
+
+    @BeforeEach
+    void setUp() {
+        policy = new MenuPermissionPolicy(storeRepository);
+    }
 
     @Test
     @DisplayName("CUSTOMER가 숨겨진 메뉴 상세 조회 시 예외가 발생한다")
