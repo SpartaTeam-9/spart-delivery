@@ -1,31 +1,76 @@
-# Sparta Delivery 개발 가이드
+# 🚚 배달 주문 관리 플랫폼
 
-이 문서는 프로젝트 소개보다 **팀원들이 스켈레톤 코드를 이어받아 각자 담당 기능을 바로 개발할 수 있게 돕는 것**을 목적으로 합니다.
+> 특정 지역 기반의 음식점 배달 주문, 결제 및 리뷰 관리 기능을 제공하는 **백엔드 플랫폼**입니다
 
-팀원들은 아래 내용을 먼저 훑고 개발을 시작해 주세요.
+<hr>
 
-- 로컬 실행 방법
-- 패키지 구조 작성 기준
-- 공통 응답/예외/엔티티 사용법
-- 인증 기능 사용 방법
-- Postman으로 JWT 인증 API 테스트하는 방법
+## ✨ 주요 특징
 
-## 참고 문서
+### 1. 권한별 특화 기능
+* **4단계 권한 체계:** `MASTER`, `MANAGER`, `OWNER`, `CUSTOMER`로 세분화된 접근 제어를 수행합니다.
+* **사용자별 인터페이스:** 메뉴 관리, 주문 상태 제어(5분 이내 취소 정책), 리뷰 작성 등 역할에 따른 맞춤형 기능을 제공합니다.
 
-- [팀 개발 환경 및 실행 가이드 Notion](https://aboard-woolen-7bf.notion.site/3449192e21f2808a98b0d839dd2b358d?source=copy_link)
-- [Auth API Postman 테스트 컬렉션](https://dark-crater-170331.postman.co/workspace/My-Workspace~39dbdca4-c1b8-41d9-8a19-bf957a106d89/folder/16128519-dac99157-eeec-4d8c-962d-6c7b53ed81b0?action=share&creator=16128519&ctx=documentation)
+### 2. 데이터 무결성 및 조회 성능 최적화
+* **Soft Delete:** 모든 엔티티에 `deleted_at` 필드를 적용하여 데이터를 물리적으로 삭제하지 않고 안전하게 보존합니다.
+* **성능 최적화:** 리뷰 평점 컬럼의 반정규화 및 QueryDSL을 이용한 복합 검색 필터를 통해 트래픽 증가 시에도 안정적인 응답 속도를 보장합니다.
 
-Notion 문서에는 팀원이 로컬 환경에서 프로젝트를 실행하고 개발을 시작할 때 필요한 기본 안내가 정리되어 있습니다.
+### 3. MSA 전환을 고려한 예비 설계
+* **점진적 확장성:** 초기 관리 효율을 위해 **Monolithic Architecture**로 시작하되, 향후 서비스별 DB 분리가 용이하도록 설계되었습니다.
+* **식별자 전략:** 유저를 제외한 모든 테이블에 **UUID PK**를 적용하여 마이크로서비스 전환 시 데이터 통합 및 마이그레이션 편의성을 확보했습니다.
 
-이 프로젝트에는 아래 의존성이 추가되어 있습니다.
+### 4. 보안 체계
+* **보안 강화:** Spring Security + JWT 환경에서 매 요청 시 DB 권한을 재검증하여 토큰 탈취 및 권한 변조 위험을 최소화합니다.
 
-```gradle
-developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-```
+<hr>
 
-그래서 IntelliJ IDEA에서 애플리케이션 실행 버튼을 누르면 `compose.yaml`에 정의된 PostgreSQL 컨테이너가 함께 실행됩니다. 별도로 Docker 명령어를 입력하거나 DB를 직접 띄우는 번거로운 작업 없이 바로 애플리케이션을 실행할 수 있습니다.
+## 🛠 주요 기능 상세
 
-## 개발 환경
+### 🔐 인증 및 보안
+* **회원가입**: 서비스 이용을 위한 신규 사용자 계정 생성 기능
+* **아이디 중복 확인**: 가입 시 실시간 중복 체크를 통해 데이터 충돌 및 중복 가입 방지
+* **로그인**: 등록된 인증 정보를 통한 JWT 기반 서비스 접속 권한 획득
+* **로그아웃**: 사용 중인 세션을 안전하게 종료하여 개인정보 및 계정 보안 유지
+
+### 👤 사용자 관리
+* **회원 정보 조회 및 수정**: 본인의 프로필(닉네임, 이메일 등) 확인 및 정보 최신화
+* **비밀번호 변경**: 계정 보안 강화를 위한 주기적 또는 필요 시 암호 재설정
+* **회원 탈퇴**: 사용자 요청 시 계정 삭제 처리 (이력 보존을 위한 Soft Delete 적용)
+* **회원 목록 조회**: (관리자 전용) 플랫폼 내 전체 가입 사용자 현황 파악
+* **사용자 권한 변경**: (관리자 전용) 역할(`CUSTOMER`, `OWNER`, `MANAGER`, `MASTER`) 조정 및 제어
+
+### 📍 주소 및 지역 관리
+* **주소 관리**: 배송지(집, 회사 등) 등록, 수정, 삭제 및 다중 주소 목록 관리
+* **대표 주소 설정**: 주문 시 자동으로 선택될 메인 배송지 지정 기능
+* **지역 관리**: (관리자 전용) 서비스 운영 지역(예: 광화문 등) 설정 및 배달 가능 구역 관리
+
+### 🏪 가맹점 및 메뉴 운영
+* **가게 관리**: 음식점 신규 등록, 매장 정보 수정, 상세 프로필 조회 및 운영 중단(폐점) 처리
+* **메뉴 관리**: 가게별 판매 상품 구성, 가격 설정, 메뉴 정보 업데이트 및 품절/숨김 관리
+
+### 📦 주문 관리
+* **음식 주문**: 메뉴와 배송지를 결합하여 실시간 주문 데이터 생성
+* **주문 내역 및 상세 조회**: 과거 주문 이력 확인 및 현재 진행 상태의 상세 정보 모니터링
+* **주문 상태 관리**: (점주 전용) '접수 - 조리 중 - 배달 중 - 완료' 등 실시간 단계 전환
+* **주문 취소**: 사용자 실수 및 가맹점 상황 고려, 주문 후 **5분 이내** 직접 취소 정책 적용
+* **주문 수정 및 삭제**: (관리자 전용) 특이 상황 발생 시 주문 정보 강제 변경 및 정제
+
+### 💳 결제 시스템
+* **결제 처리**: 확정된 주문에 대한 카드 결제 승인 및 거래 내역 생성
+* **결제 상태 및 내역 조회**: 결제 진행 단계 확인 및 과거 결제 증빙 기록 관리
+* **결제 취소**: 주문 취소 시 연동된 결제 건의 환불 및 승인 무효화 처리
+
+### ⭐ 리뷰 및 평점
+* **리뷰 관리**: 주문 완료(`COMPLETED`) 건에 한해 실사용자 리뷰 작성, 수정 및 삭제
+* **평점 등록**: 서비스 및 맛에 대한 점수(1~5점) 부여 및 가게별 평균 평점 자동 반영
+
+### 💡 기타
+* **운영 안정성**: 모든 기능은 사용자 권한(`Role`)에 따라 철저히 분리되어 내부 보안을 강화
+* **데이터 보존**: 물리적 삭제 대신 **이력 보존(Soft Delete)** 방식을 채택하여 데이터 신뢰도를 확보
+* **실무 지향 UX**: **5분 취소 제한** 및 **대표 주소 설정** 등 실제 배달 서비스의 사용자 경험을 적극 반영
+
+<hr>
+
+## 📂 개발 환경
 
 | 항목 | 내용 |
 | --- | --- |
@@ -53,7 +98,7 @@ developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 | `spring-security-test` | Security 관련 테스트 지원 |
 | `spring-boot-configuration-processor` | `@ConfigurationProperties` 메타데이터 생성 |
 
-## 실행 방법
+### 실행 방법
 
 1. Docker Desktop을 실행합니다.
 2. IntelliJ IDEA에서 프로젝트를 엽니다.
@@ -72,13 +117,11 @@ spring:
 
 별도 환경변수를 설정하지 않으면 로컬 기본값으로 실행됩니다.
 
-## 패키지 구조 작성 기준
-
-이 프로젝트의 패키지 구조는 튜터님이 공유해주신 SA 문서의 구조를 기준으로 잡았습니다.
-
+### 패키지 구조 작성 기준
 큰 원칙은 **도메인별 패키지 분리 + 계층별 하위 패키지 분리**입니다.
-
-현재 구조:
+*   **계층별 역할 분담**: 컨트롤러(Presentation), 서비스(Service), 엔티티(Domain)로 계층을 나누어 각자의 로직에만 집중하도록 설계하였습니다.
+*   **DTO 중심의 데이터 교환**: 클라이언트의 요청(Request)과 서버의 응답(Response)을 DTO로 엄격히 분리하여 데이터의 독립성과 보안을 강화했습니다.
+*   **전역 공통 설정**: 예외 처리(Exception), 보안(Security), 공통 코드(Global)를 별도로 관리하여 코드 중복을 최소화하고 시스템 일관성을 유지합니다.
 
 ```text
 com.sparta.spartadelivery
@@ -105,46 +148,7 @@ com.sparta.spartadelivery
         ├── controller
         └── dto
 ```
-
-팀원들이 새 도메인을 만들 때는 아래 구조를 기본으로 사용하면 됩니다.
-
-```text
-도메인명
-├── application
-│   └── service
-├── domain
-│   ├── entity
-│   └── repository
-└── presentation
-    ├── controller
-    └── dto
-        ├── request
-        └── response
-```
-
-예시: `store` 도메인
-
-```text
-store
-├── application
-│   └── service
-│       └── StoreService.java
-├── domain
-│   ├── entity
-│   │   └── StoreEntity.java
-│   └── repository
-│       └── StoreRepository.java
-└── presentation
-    ├── controller
-    │   └── StoreController.java
-    └── dto
-        ├── request
-        │   └── ReqCreateStoreDto.java
-        └── response
-            └── ResStoreDto.java
-```
-
-SA 문서 기준 주요 도메인은 다음과 같습니다.
+주요 도메인은 다음과 같습니다.
 
 | 도메인 | 역할 |
 | --- | --- |
@@ -158,7 +162,16 @@ SA 문서 기준 주요 도메인은 다음과 같습니다.
 | `order` | 주문 생성, 주문 상태 관리 |
 | `review` | 주문 완료 후 리뷰 및 평점 |
 | `payment` | 주문 결제 정보 |
-| `ai` | Gemini API 요청 및 응답 로그 관리 |
+
+<hr>
+
+## 🗄️ ERD
+- **UUID 기반 PK 적용**: 확장성과 보안을 위해 사용자 테이블을 제외한 전 테이블에 UUID를 기본키로 사용합니다.
+- **물리적 FK 제약 제거**: 성능 최적화와 서비스 간 결합도를 낮추기 위해 물리적 외래키(FK)를 생성하지 않았습니다.
+- **논리적 비식별 관계**: 테이블 간 관계는 물리적 제약 없이 로직 상에서만 연결되는 '논리적 관계'로 관리하여 유연성을 확보했습니다.
+  <br><br>[ERD 다이어그램 보러가기](https://www.erdcloud.com/d/DowNmJGFxc5x9BERB)
+<hr>
+
 
 ## 공통 클래스 사용법
 
@@ -203,7 +216,7 @@ store.markDeleted(currentUsername);
 
 ```java
 if (store.isDeleted()) {
-    throw new AppException(ErrorCode.INVALID_REQUEST);
+        throw new AppException(ErrorCode.INVALID_REQUEST);
 }
 ```
 
@@ -244,7 +257,7 @@ return ResponseEntity.ok(
 
 ```java
 if (!store.isOwnedBy(user)) {
-    throw new AppException(ErrorCode.ACCESS_DENIED);
+        throw new AppException(ErrorCode.ACCESS_DENIED);
 }
 ```
 
