@@ -54,6 +54,6 @@ public class MenuPermissionAspect {
             default -> throw new AppException(MenuErrorCode.INVALID_PERMISSION_REQUEST);
         }
 
-        urn joinPoint.proceed();
+        return joinPoint.proceed();
     }
 }
