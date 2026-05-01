@@ -1,16 +1,17 @@
 name: CD - Deploy to AWS EC2
 
 on:
-  # CI 성공 시 실행되도록 설정하거나, main 브랜치 푸시 시 실행
-  workflow_run:
-    workflows: ["CI - Build and Integration Test"]
-    types: [completed]
-    branches: [main]
+  push:
+    branches:
+      - prod # main 에 할 수 없으므로 지금은 prod로 합니다.
+      # main 이라면 workflows -> types -> branches 로 정의해야 합니다.
+
 
 jobs:
   deploy:
     # CI 성공 시에만 실행
-    if: ${{ github.event.workflow_run.conclusion == 'succes' }}
+
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +23,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
     # Amazon ECR login
@@ -54,6 +55,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }} # Elastic IP
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY,RDS_HOSTURL,RDS_USERNAME,RDS_PASSWORD,JWT_SECRET
           script: |
             #ECR login
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
@@ -72,9 +74,9 @@ jobs:
               -e SPRING_DATASOURCE_USERNAME=${{secrets.RDS_USERNAME }} \
               -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              ${{ steps.login-ecr.outpus.registry }}/spring-boot-app:latest
+              ${{ steps.login-ecr.outputs.registry }}/spring-boot-app:latest
 
-      # Health Check
+            # Health Check
             echo "Starting health check..."
             for i in {1..10}; do
             # spring actuator health endpoint
@@ -86,7 +88,7 @@ jobs:
               sleep 10
             done
       
-      # Health Check 실패 -> 롤백
+            # Health Check 실패 -> 롤백
             echo "Health Check Failed - Rolling back..."
             docker stop spring-app || true
             docker rm spring-app || true
@@ -100,6 +102,6 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           status: ${{ job.status }}
-          content: "배포 결과: ${{ job.status == 'success' && '🎊배포 성공' || '😨 배포 실패 및 롤백 ' }}\n접속 URL: http:${{ secrets.EC2_HOST }}"
+          content: "배포 결과: ${{ job.status == 'success' && '🎊배포 성공' || '😨 배포 실패 및 롤백 ' }}\n접속 URL: http://${{ secrets.EC2_HOST }}"
 
 

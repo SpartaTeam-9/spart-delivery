@@ -44,9 +44,6 @@ class MenuServiceTest {
     @Mock
     private MenuPermissionPolicy menuPermissionPolicy;
 
-    @Mock
-    private MenuManagePermissionPolicy menuManagePermissionPolicy;
-
     @InjectMocks
     private MenuService menuService;
 
@@ -122,7 +119,7 @@ class MenuServiceTest {
         when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
         when(store.isDeleted()).thenReturn(false);
 
-        doNothing().when(menuManagePermissionPolicy).validateManagePermission(any(), any());
+        doNothing().when(menuPermissionPolicy).validateManagePermission(any(), any());
 
         when(menuRepository.save(any(Menu.class)))
                 .thenAnswer(invocation -> {
@@ -137,7 +134,7 @@ class MenuServiceTest {
         // then
         assertThat(response).isNotNull();
         verify(menuRepository).save(any(Menu.class));
-        verify(menuManagePermissionPolicy).validateManagePermission(eq(requester), eq(store));
+        verify(menuPermissionPolicy).validateManagePermission(eq(requester), eq(store));
     }
 
     @Test
@@ -167,10 +164,10 @@ class MenuServiceTest {
         // 5. Policy에서 소유권 검증 실패(AppException)를 던지도록 설정
         // 서비스 로직에서 가장 먼저 호출되는 validateManagePermission을 타겟팅
         doThrow(new AppException(MenuErrorCode.MENU_UPDATE_ACCESS_DENIED))
-                .when(menuManagePermissionPolicy).validateManagePermission(eq(notOwner), any(Store.class));
+                .when(menuPermissionPolicy).validateManagePermission(eq(notOwner), any(Store.class));
 
         // when & then
-        assertThatThrownBy(() -> menuService.update(menuId, notOwner, request))
+        assertThatThrownBy(() -> menuService.updateMenu(menuId, notOwner, request))
                 .isInstanceOf(AppException.class)
                 .extracting("errorCode")
                 .isEqualTo(MenuErrorCode.MENU_UPDATE_ACCESS_DENIED);
@@ -211,13 +208,13 @@ class MenuServiceTest {
         when(storeRepository.findById(any()))
                 .thenReturn(Optional.of(store));
 
-        doNothing().when(menuManagePermissionPolicy)
+        doNothing().when(menuPermissionPolicy)
                 .validateManagePermission(any(), any());
-        doNothing().when(menuManagePermissionPolicy)
+        doNothing().when(menuPermissionPolicy)
                 .validateUpdateCondition(any(), any());
 
         MenuUpdateResponse response =
-                menuService.update(menuId, editor, request);
+                menuService.updateMenu(menuId, editor, request);
 
         //then
         assertThat(response.name()).isEqualTo("수정된 메뉴");

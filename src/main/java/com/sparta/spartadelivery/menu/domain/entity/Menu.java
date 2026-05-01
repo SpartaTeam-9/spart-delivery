@@ -1,7 +1,9 @@
 package com.sparta.spartadelivery.menu.domain.entity;
 
 import com.sparta.spartadelivery.global.entity.BaseEntity;
+import com.sparta.spartadelivery.global.exception.AppException;
 import com.sparta.spartadelivery.menu.domain.vo.MoneyVO;
+import com.sparta.spartadelivery.menu.exception.MenuErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -57,7 +59,7 @@ public class Menu extends BaseEntity {
             Integer price,
             String description,
             String menuPictureUrl,
-            boolean isHidden,
+            boolean isHidden, // 추후 제거
             String aiDescription,
             String aiPrompt) {
 
@@ -67,7 +69,7 @@ public class Menu extends BaseEntity {
         this.price = new MoneyVO(price);
         this.description = description;
         this.menuPictureUrl = menuPictureUrl;
-        this.isHidden = isHidden;
+        this.isHidden = isHidden; // 추후 isHidden -> false
         this.aiDescription = aiDescription;
         this.aiPrompt = aiPrompt;
     }
@@ -80,7 +82,7 @@ public class Menu extends BaseEntity {
             Integer price,
             String description,
             String menuPictureUrl,
-            boolean isHidden,
+            boolean isHidden, // 추후 제거
             String aiDescription,
             String aiPrompt) {
 
@@ -90,16 +92,22 @@ public class Menu extends BaseEntity {
         this.price = new MoneyVO(price);
         this.description = description;
         this.menuPictureUrl = menuPictureUrl;
-        this.isHidden = isHidden;
+        this.isHidden = isHidden; // 추후 제거
         this.aiDescription = aiDescription;
         this.aiPrompt = aiPrompt;
     }
 
     public void hide() {
+        if (this.isHidden) {
+            throw new AppException(MenuErrorCode.MENU_ALREADY_HIDDEN);
+        }
         this.isHidden = true;
     }
 
     public void show() {
+        if (!this.isHidden) {
+            throw new AppException(MenuErrorCode.MENU_ALREADY_SHOW);
+        }
         this.isHidden = false;
     }
 }
