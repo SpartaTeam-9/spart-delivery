@@ -167,7 +167,7 @@ public class MenuController {
                                      @RequestBody MenuUpdateRequest request,
                                      @AuthenticationPrincipal UserPrincipal updateBy
     ) {
-        MenuUpdateResponse response = menuService.update(menuId, updateBy, request);
+        MenuUpdateResponse response = menuService.updateMenu(menuId, updateBy, request);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.success(HttpStatus.OK.value(), "메뉴가 성공적으로 수정됐습니다.", response));
     }
